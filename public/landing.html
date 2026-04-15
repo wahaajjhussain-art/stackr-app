@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stackr — Build Habits That Stick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Playfair+Display:ital,wght@1,400;1,500;1,600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="intro.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+:root{
+  --ink:#16140F;
+  --ink2:#2E2B24;
+  --ink3:#524E46;
+  --ink4:#8A857C;
+  --ink5:#C2BDB4;
+  --parchment:#F6F1E8;
+  --parchment2:#EEE8DC;
+  --surface:#FDFAF4;
+  --border:#DDD6C8;
+  --accent:#1E4D30;
+  --accent2:#2F6B43;
+  --accent3:#5A9E72;
+  --accent-light:#E2EFE6;
+  --gold:#9A6B1E;
+  --gold2:#C49030;
+  --gold3:#E8B84B;
+  --gold-light:#FAF0DC;
+  --law1:#2B5F82; --law1-bg:#E3EFF7;
+  --law2:#6B3A96; --law2-bg:#EEE3F8;
+  --law3:#1E4D30; --law3-bg:#E2EFE6;
+  --law4:#9A6B1E; --law4-bg:#FAF0DC;
+}
+
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--parchment);overflow-x:hidden}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(246,241,232,0.15);border-radius:4px}
+
+/* --- NAV --- */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.25rem 3rem;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid transparent;
+  transition:background 0.4s ease,border-color 0.4s ease;
+}
+.nav.scrolled{
+  background:rgba(22,20,15,0.92);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom-color:rgba(255,255,255,0.06);
+}
+.nav-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:400;
+  color:var(--parchment);letter-spacing:0.5px;
+  text-decoration:none;
+}
+.nav-logo em{font-style:italic;color:var(--gold3)}
+.nav-links{display:flex;align-items:center;gap:2.5rem}
+.nav-link{
+  font-size:13px;font-weight:400;
+  color:rgba(246,241,232,0.55);
+  text-decoration:none;letter-spacing:0.3px;
+  transition:color 0.2s;
+}
+.nav-link:hover{color:#F6F1E8}
+.nav-cta{
+  padding:0.5rem 1.25rem;border-radius:50px;
+  background:transparent;
+  border:1px solid rgba(246,241,232,0.2);
+  color:#F6F1E8;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:500;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;
+}
+.nav-cta:hover{background:rgba(246,241,232,0.07);border-color:rgba(246,241,232,0.4)}
+
+/* --- HERO --- */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  padding:8rem 2rem 6rem;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 30%, rgba(30,77,48,0.20) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 80% 75%, rgba(196,144,48,0.10) 0%, transparent 100%),
+    var(--ink);
+}
+.hero::after{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;opacity:0.35;z-index:1;
+}
+.orb{
+  position:absolute;border-radius:50%;
+  filter:blur(90px);opacity:0.12;
+  animation:drift linear infinite;
+}
+.orb-1{width:520px;height:520px;background:var(--accent);top:-80px;left:-80px;animation-duration:28s}
+.orb-2{width:380px;height:380px;background:var(--gold2);bottom:-60px;right:-60px;animation-duration:34s;animation-delay:-12s}
+.orb-3{width:280px;height:280px;background:#6B3A96;top:40%;left:65%;animation-duration:22s;animation-delay:-6s}
+
+@keyframes drift{
+  0%{transform:translate(0,0) rotate(0deg)}
+  33%{transform:translate(40px,-25px) rotate(120deg)}
+  66%{transform:translate(-25px,35px) rotate(240deg)}
+  100%{transform:translate(0,0) rotate(360deg)}
+}
+
+.hero-content{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;
+  align-items:center;text-align:center;
+  max-width:1000px;width:100%;
+}
+.hero-eyebrow{
+  font-size:10px;font-weight:500;
+  letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--gold3);margin-bottom:2rem;
+  display:flex;align-items:center;gap:12px;
+  opacity:0;animation:fadeUp 1s 0.2s ease forwards;
+}
+.hero-eyebrow::before,.hero-eyebrow::after{
+  content:'';width:30px;height:1px;
+  background:var(--gold3);opacity:0.5;flex-shrink:0;
+}
+.hero-quote{
+  font-family:'Playfair Display',serif;
+  font-style:italic;font-weight:500;
+  font-size:clamp(20px,3vw,42px);
+  line-height:1.2;max-width:880px;text-align:center;
+  background:linear-gradient(135deg,#F6F1E8 0%,var(--gold3) 35%,#F6F1E8 65%,var(--accent3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  opacity:0;animation:fadeUp 1.2s 0.55s ease forwards;
+}
+.hero-attribution{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:300;font-size:17px;
+  color:rgba(246,241,232,0.38);letter-spacing:1px;
+  margin-top:1.25rem;margin-bottom:2rem;
+  opacity:0;animation:fadeUp 1s 1s ease forwards;
+}
+.hero-sub{
+  font-size:16px;font-weight:300;
+  color:rgba(246,241,232,0.45);
+  max-width:400px;line-height:1.75;
+  margin-bottom:2.75rem;
+  opacity:0;animation:fadeUp 1s 1.2s ease forwards;
+}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:1rem 2.75rem;background:var(--accent);
+  color:#F6F1E8;border:none;border-radius:50px;
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:500;cursor:pointer;
+  letter-spacing:0.3px;
+  box-shadow:0 4px 28px rgba(30,77,48,0.35);
+  transition:all 0.3s;
+  opacity:0;animation:fadeUp 1s 1.4s ease forwards;
+}
+.hero-cta:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 8px 40px rgba(30,77,48,0.55)}
+.scroll-hint{
+  position:absolute;bottom:2.5rem;left:50%;
+  transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  z-index:2;
+  opacity:0;animation:fadeIn 1s 2s ease forwards;
+}
+.scroll-txt{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(246,241,232,0.2)}
+.scroll-line{
+  width:1px;height:48px;
+  background:linear-gradient(to bottom,rgba(246,241,232,0.25),transparent);
+  animation:scrollPulse 2.2s ease infinite;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scrollPulse{0%,100%{transform:scaleY(1);opacity:0.4}50%{transform:scaleY(1.4);opacity:0.9}}
+
+/* --- REVEAL --- */
+.reveal{opacity:0;transform:translateY(44px);transition:opacity 0.85s ease,transform 0.85s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* --- BANNERS --- */
+.banners-section{background:var(--ink)}
+.banner{min-height:92vh;overflow:hidden;display:flex;align-items:center;position:relative}
+.banner:nth-child(even){background:var(--ink2)}
+.banner-bg-text{
+  position:absolute;
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(120px,18vw,220px);
+  font-weight:500;font-style:italic;
+  white-space:nowrap;pointer-events:none;user-select:none;
+  top:50%;transform:translateY(-50%);
+  opacity:0.025;color:#F6F1E8;letter-spacing:-4px;z-index:0;
+}
+.banner-inner{position:relative;z-index:1;width:100%;will-change:transform}
+.banner-content{
+  display:grid;grid-template-columns:1fr 1fr;
+  align-items:center;gap:5rem;padding:0 10vw;
+}
+.banner-content.reverse{direction:rtl}
+.banner-content.reverse > *{direction:ltr}
+.banner-label{font-size:10px;font-weight:500;letter-spacing:3px;text-transform:uppercase;margin-bottom:1rem}
+.banner-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(36px,4vw,58px);
+  font-weight:400;line-height:1.2;color:#F6F1E8;margin-bottom:1.25rem;
+}
+.banner-title em{font-style:italic;color:var(--gold3)}
+.banner-body{font-size:15px;font-weight:300;color:rgba(246,241,232,0.48);line-height:1.8;max-width:400px}
+.visual-card{
+  background:rgba(246,241,232,0.04);
+  border:1px solid rgba(246,241,232,0.08);
+  border-radius:20px;padding:1.75rem;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+
+/* --- STREAK VISUAL --- */
+.streak-display{text-align:center;padding:0.5rem}
+.streak-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:96px;font-weight:500;line-height:1;display:block;
+  background:linear-gradient(135deg,var(--gold3),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.streak-lbl{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:1.5px;color:rgba(246,241,232,0.35);margin-top:6px}
+.streak-dots{
+  display:flex;justify-content:center;gap:6px;
+  margin-top:1.5rem;flex-wrap:wrap;
+  max-width:220px;margin-left:auto;margin-right:auto;
+}
+.streak-dot{width:10px;height:10px;border-radius:50%}
+.streak-dot.lit{background:var(--gold3);box-shadow:0 0 8px rgba(232,184,75,0.55)}
+.streak-dot.unlit{background:rgba(246,241,232,0.1)}
+
+/* --- DAILY CHECKLIST --- */
+.daily-list{display:flex;flex-direction:column;gap:10px}
+.daily-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:8px;
+  background:rgba(246,241,232,0.04);
+  border:1px solid rgba(246,241,232,0.07);
+}
+.daily-check{
+  width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;flex-shrink:0;
+  border:1.5px solid rgba(246,241,232,0.18);
+  background:transparent;color:transparent;
+}
+.daily-check.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.daily-name{font-size:12px;color:rgba(246,241,232,0.6);flex:1}
+.law-badge{font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;letter-spacing:0.3px;flex-shrink:0}
+
+/* --- BAR CHART --- */
+.chart-section-lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(246,241,232,0.28);margin-bottom:8px}
+.mini-bars{display:flex;align-items:flex-end;gap:5px;height:80px;margin-bottom:1.25rem}
+.mini-bar{flex:1;border-radius:4px 4px 0 0;background:rgba(246,241,232,0.07);position:relative;overflow:hidden}
+.mini-bar::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,var(--accent2),var(--accent3));
+  border-radius:4px 4px 0 0;height:0;
+}
+.mini-bars.animated .mini-bar::after{animation:barFill 1.6s ease forwards}
+.mini-bars.animated .mini-bar:nth-child(1)::after{animation-delay:0s}
+.mini-bars.animated .mini-bar:nth-child(2)::after{animation-delay:0.08s}
+.mini-bars.animated .mini-bar:nth-child(3)::after{animation-delay:0.16s}
+.mini-bars.animated .mini-bar:nth-child(4)::after{animation-delay:0.24s}
+.mini-bars.animated .mini-bar:nth-child(5)::after{animation-delay:0.32s}
+.mini-bars.animated .mini-bar:nth-child(6)::after{animation-delay:0.40s}
+.mini-bars.animated .mini-bar:nth-child(7)::after{animation-delay:0.48s}
+.mini-bars.animated .mini-bar:nth-child(8)::after{animation-delay:0.56s}
+.mini-bars.animated .mini-bar:nth-child(9)::after{animation-delay:0.64s}
+.mini-bars.animated .mini-bar:nth-child(10)::after{animation-delay:0.72s}
+@keyframes barFill{to{height:var(--h)}}
+
+/* --- HEATMAP --- */
+.mini-heatmap{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.hm-cell{aspect-ratio:1;border-radius:3px;background:rgba(246,241,232,0.07)}
+.hm-cell.hm-l1{background:rgba(90,158,114,0.3)}
+.hm-cell.hm-l2{background:rgba(47,107,67,0.6)}
+.hm-cell.hm-l3{background:rgba(30,77,48,0.95)}
+
+/* --- CALENDAR --- */
+.cal-lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(246,241,232,0.28);margin-bottom:12px}
+.mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:1.25rem}
+.cal-cell{
+  aspect-ratio:1;border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-family:'DM Mono',monospace;color:rgba(246,241,232,0.3);
+}
+.cal-cell.cal-filled{background:rgba(47,107,67,0.75);color:rgba(246,241,232,0.6)}
+.cal-cell.cal-faint{background:rgba(246,241,232,0.05)}
+.cal-cell.cal-today{background:var(--gold3);color:#16140F;font-weight:500}
+.cal-cell.cal-future{background:rgba(246,241,232,0.04)}
+.cal-stats{display:flex;gap:2rem}
+.cal-stat-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500}
+.cal-stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(246,241,232,0.28);margin-top:2px}
+
+/* --- MID CTA --- */
+.mid-cta{padding:10rem 2rem;text-align:center;position:relative;overflow:hidden;background:var(--ink)}
+.mid-cta-bg{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(30,77,48,0.18) 0%, transparent 70%);
+}
+.mid-cta-inner{position:relative;z-index:1}
+.mid-cta-eyebrow{font-size:10px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gold3);margin-bottom:1.5rem}
+.mid-cta-title{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:500;
+  font-size:clamp(28px,4vw,58px);
+  color:#F6F1E8;line-height:1.2;
+  max-width:780px;margin:0 auto 1.5rem;
+}
+.mid-cta-sub{font-size:15px;font-weight:300;color:rgba(246,241,232,0.4);max-width:380px;margin:0 auto 3rem;line-height:1.8}
+.cta-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:1rem 2.75rem;border-radius:50px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;
+  border:none;letter-spacing:0.3px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#F6F1E8;
+  box-shadow:0 4px 28px rgba(30,77,48,0.35);
+  transition:all 0.3s;
+}
+.cta-btn:hover{transform:translateY(-3px);box-shadow:0 10px 44px rgba(30,77,48,0.55)}
+
+/* --- SHARED SECTION STYLES --- */
+.section-hdr{margin-bottom:4rem}
+.section-title{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;
+  font-size:clamp(38px,5vw,56px);color:#F6F1E8;margin-bottom:0.75rem;line-height:1.1;
+}
+.section-sub{font-size:15px;font-weight:300;color:rgba(246,241,232,0.4);max-width:480px;line-height:1.75}
+
+/* --- HOW IT WORKS --- */
+#how{padding:8rem 10vw;background:var(--ink2)}
+.steps-list{display:flex;flex-direction:column}
+.step{
+  display:grid;grid-template-columns:80px 1fr;gap:2rem;
+  padding:3rem 0;border-bottom:1px solid rgba(246,241,232,0.07);
+}
+.step-num{font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:300;color:rgba(246,241,232,0.07);line-height:1}
+.step-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:#F6F1E8;margin-bottom:0.75rem}
+.step-body{font-size:14px;font-weight:300;color:rgba(246,241,232,0.42);max-width:520px;line-height:1.8}
+
+/* --- FAQ --- */
+#faq{padding:8rem 10vw;background:var(--ink2)}
+.faq-list{max-width:740px}
+.faq-item{border-bottom:1px solid rgba(246,241,232,0.07);padding:1.5rem 0;cursor:pointer}
+.faq-q-row{display:flex;justify-content:space-between;align-items:center;gap:2rem}
+.faq-q-text{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#F6F1E8}
+.faq-arrow{
+  width:20px;height:20px;flex-shrink:0;border:1px solid rgba(246,241,232,0.18);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:rgba(246,241,232,0.4);
+  transition:transform 0.3s,border-color 0.3s,color 0.3s;user-select:none;
+}
+.faq-item.open .faq-arrow{transform:rotate(45deg);border-color:var(--accent3);color:var(--accent3)}
+.faq-a{
+  font-size:14px;font-weight:300;color:rgba(246,241,232,0.4);line-height:1.8;
+  max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding-top 0.3s;padding-top:0;
+}
+.faq-item.open .faq-a{max-height:200px;padding-top:1rem}
+
+/* --- CONTACT --- */
+#contact{padding:8rem 10vw;background:var(--ink)}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;max-width:920px;align-items:start}
+.contact-form{display:flex;flex-direction:column;gap:16px}
+.field-label{display:block;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:rgba(246,241,232,0.28);margin-bottom:6px}
+.field-input,.field-textarea{
+  width:100%;background:rgba(246,241,232,0.04);border:1px solid rgba(246,241,232,0.1);
+  border-radius:8px;padding:0.9rem 1rem;
+  font-family:'DM Sans',sans-serif;font-size:14px;color:#F6F1E8;
+  outline:none;transition:border-color 0.2s;
+}
+.field-input::placeholder,.field-textarea::placeholder{color:rgba(246,241,232,0.22)}
+.field-input:focus,.field-textarea:focus{border-color:var(--accent3)}
+.field-textarea{resize:none;min-height:120px}
+.submit-btn{
+  align-self:flex-start;padding:0.8rem 2rem;
+  background:var(--accent);color:#F6F1E8;border:none;border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;transition:all 0.2s;
+}
+.submit-btn:hover{background:var(--accent2);transform:translateY(-1px)}
+.contact-headline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:32px;font-weight:400;color:#F6F1E8;margin-bottom:1.75rem;line-height:1.3}
+.contact-detail{display:flex;gap:12px;align-items:flex-start;margin-bottom:1.25rem}
+.contact-icon{color:var(--accent3);font-size:16px;flex-shrink:0;margin-top:1px}
+.contact-text{font-size:14px;color:rgba(246,241,232,0.4);line-height:1.6}
+.contact-text small{font-size:12px;color:rgba(246,241,232,0.2)}
+
+/* --- FOOTER --- */
+footer{
+  padding:3rem 10vw;background:var(--ink);
+  border-top:1px solid rgba(246,241,232,0.06);
+  display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap;
+}
+.footer-logo{display:inline-flex;align-items:center;text-decoration:none;opacity:0.8;transition:opacity 0.2s}
+.footer-logo:hover{opacity:1}
+.footer-nav{display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
+.footer-link{font-size:12px;color:rgba(246,241,232,0.35);text-decoration:none;transition:color 0.2s}
+.footer-link:hover{color:rgba(246,241,232,0.7)}
+.footer-tagline{font-size:12px;font-weight:300;color:rgba(246,241,232,0.25)}
+</style>
+</head>
+<body>
+
+<!-- =====================================================
+     STACKR INTRO OVERLAY
+     Sits above landing; fades out after 4s.
+     Sections: overlay > center > [glow, svg, label]
+     ===================================================== -->
+<div id="stackr-intro" role="presentation" aria-hidden="true">
+  <div id="intro-center">
+
+    <!-- Glow halo (Phase 4 pulse) -->
+    <div id="intro-glow"></div>
+
+    <!-- Logo SVG: 5 stacked bars, individually animated -->
+    <svg id="intro-svg" viewBox="0 0 152 50" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="iBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#1E4D30"/>
+          <stop offset="50%"  stop-color="#2F6B43"/>
+          <stop offset="100%" stop-color="#5A9E72"/>
+        </linearGradient>
+      </defs>
+      <!-- Each <g> is translated by intro.js; rect x=0 so gradient maps cleanly -->
+      <g class="ibar" id="ibar0"><rect x="0" y="0"  width="120" height="6" rx="1.5" fill="url(#iBarGrad)" opacity="0.72"/></g>
+      <g class="ibar" id="ibar1"><rect x="0" y="11" width="120" height="6" rx="1.5" fill="url(#iBarGrad)" opacity="0.80"/></g>
+      <g class="ibar" id="ibar2"><rect x="0" y="22" width="120" height="6" rx="1.5" fill="url(#iBarGrad)" opacity="0.88"/></g>
+      <g class="ibar" id="ibar3"><rect x="0" y="33" width="120" height="6" rx="1.5" fill="url(#iBarGrad)" opacity="0.94"/></g>
+      <g class="ibar" id="ibar4"><rect x="0" y="44" width="120" height="6" rx="1.5" fill="url(#iBarGrad)" opacity="1.00"/></g>
+    </svg>
+
+    <!-- Wordmark below bars -->
+    <span id="intro-label">Stackr</span>
+
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav" id="main-nav">
+  <!-- Stackr logo: SVG bar-stack icon + wordmark -->
+  <a class="s-nav-logo" href="#" id="nav-logo-link">
+    <svg class="s-nav-icon" viewBox="0 0 37 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="nBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#1E4D30"/>
+          <stop offset="100%" stop-color="#5A9E72"/>
+        </linearGradient>
+      </defs>
+      <rect x="6"  y="0"    width="26" height="3.5" rx="0.8" fill="url(#nBarGrad)" opacity="0.70"/>
+      <rect x="2"  y="5.5"  width="26" height="3.5" rx="0.8" fill="url(#nBarGrad)" opacity="0.82"/>
+      <rect x="9"  y="11"   width="26" height="3.5" rx="0.8" fill="url(#nBarGrad)" opacity="0.92"/>
+      <rect x="4"  y="16.5" width="26" height="3.5" rx="0.8" fill="url(#nBarGrad)" opacity="1.00"/>
+    </svg>
+    <span class="s-nav-name">Stackr</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#how">How it Works</a>
+    <a class="nav-link" href="#faq">FAQ</a>
+    <a class="nav-link" href="#contact">Contact</a>
+    <button class="nav-cta" onclick="window.location.href='/login'">Change your Habit</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Stackr — Your Daily System</div>
+    <h1 class="hero-quote">"We become what we repeatedly do. Excellence, then, is not an act, but a habit."</h1>
+    <p class="hero-attribution">Aristotle</p>
+    <p class="hero-sub">Tiny changes. Remarkable results. Track the habits that compound into the life you're building.</p>
+    <button class="hero-cta" onclick="window.location.href='/login'">
+      Change your Habit
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </button>
+  </div>
+  <div class="scroll-hint">
+    <span class="scroll-txt">Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- BANNERS -->
+<div class="banners-section">
+
+  <!-- Banner 1: Streak -->
+  <div class="banner" id="banner-1">
+    <div class="banner-bg-text" style="right:-4%">Streak</div>
+    <div class="banner-inner">
+      <div class="banner-content">
+        <div class="reveal">
+          <div class="banner-label" style="color:var(--gold3)">Principle 4 : Make it Rewarding</div>
+          <h2 class="banner-title">Watch your <em>streak</em> become your identity.</h2>
+          <p class="banner-body">Every check-in is a vote for the person you want to become. The streak isn't a number. It's proof.</p>
+        </div>
+        <div class="visual-card reveal">
+          <div class="streak-display">
+            <span class="streak-num" id="streak-num">0</span>
+            <div class="streak-lbl">Day Streak</div>
+            <div class="streak-dots" id="streak-dots"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner 2: Daily View -->
+  <div class="banner" id="banner-2">
+    <div class="banner-bg-text" style="left:-2%">Daily</div>
+    <div class="banner-inner">
+      <div class="banner-content reverse">
+        <div class="reveal">
+          <div class="banner-label" style="color:var(--accent3)">Principle 1 : Make it Clear</div>
+          <h2 class="banner-title">Your day, <em>at a glance.</em></h2>
+          <p class="banner-body">Every habit, every morning. Check in with a single tap. No friction, no excuses.</p>
+        </div>
+        <div class="visual-card reveal">
+          <div class="daily-list">
+            <div class="daily-row">
+              <div class="daily-check done"></div>
+              <div class="daily-name">Morning pages (10 min)</div>
+              <div class="law-badge" style="background:var(--law1-bg);color:var(--law1)">Obvious</div>
+            </div>
+            <div class="daily-row">
+              <div class="daily-check done"></div>
+              <div class="daily-name">Cold shower</div>
+              <div class="law-badge" style="background:var(--law3-bg);color:var(--law3)">Easy</div>
+            </div>
+            <div class="daily-row">
+              <div class="daily-check done"></div>
+              <div class="daily-name">Read 20 pages</div>
+              <div class="law-badge" style="background:var(--law4-bg);color:var(--law4)">Satisfying</div>
+            </div>
+            <div class="daily-row">
+              <div class="daily-check"></div>
+              <div class="daily-name">Evening walk</div>
+              <div class="law-badge" style="background:var(--law2-bg);color:var(--law2)">Attractive</div>
+            </div>
+            <div class="daily-row">
+              <div class="daily-check"></div>
+              <div class="daily-name">No screens after 9pm</div>
+              <div class="law-badge" style="background:var(--law3-bg);color:var(--law3)">Easy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner 3: Analytics -->
+  <div class="banner" id="banner-3">
+    <div class="banner-bg-text" style="right:-2%">Analytics</div>
+    <div class="banner-inner">
+      <div class="banner-content">
+        <div class="reveal">
+          <div class="banner-label" style="color:#B585D4">Principle 2 : Make it Appealing</div>
+          <h2 class="banner-title">Progress you can <em>actually see.</em></h2>
+          <p class="banner-body">Beautiful charts, heatmaps, and completion rates that make your momentum visible and addictive.</p>
+        </div>
+        <div class="visual-card reveal">
+          <div class="chart-section-lbl">30-day completion</div>
+          <div class="mini-bars" id="mini-bars">
+            <div class="mini-bar" style="--h:38%"></div>
+            <div class="mini-bar" style="--h:55%"></div>
+            <div class="mini-bar" style="--h:42%"></div>
+            <div class="mini-bar" style="--h:78%"></div>
+            <div class="mini-bar" style="--h:65%"></div>
+            <div class="mini-bar" style="--h:88%"></div>
+            <div class="mini-bar" style="--h:82%"></div>
+            <div class="mini-bar" style="--h:100%"></div>
+            <div class="mini-bar" style="--h:91%"></div>
+            <div class="mini-bar" style="--h:75%"></div>
+          </div>
+          <div class="chart-section-lbl">Activity heatmap</div>
+          <div class="mini-heatmap" id="mini-heatmap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner 4: Monthly -->
+  <div class="banner" id="banner-4">
+    <div class="banner-bg-text" style="left:-2%">Monthly</div>
+    <div class="banner-inner">
+      <div class="banner-content reverse">
+        <div class="reveal">
+          <div class="banner-label" style="color:var(--accent3)">Principle 3 : Make it Simple</div>
+          <h2 class="banner-title">The long game, <em>made simple.</em></h2>
+          <p class="banner-body">Monthly trackers let you zoom out and see what you're truly building. One percent better, every single day.</p>
+        </div>
+        <div class="visual-card reveal">
+          <div class="cal-lbl">April 2026</div>
+          <div class="mini-cal" id="mini-cal"></div>
+          <div class="cal-stats">
+            <div>
+              <div class="cal-stat-val" style="color:var(--accent3)">87%</div>
+              <div class="cal-stat-lbl">Month Rate</div>
+            </div>
+            <div>
+              <div class="cal-stat-val" style="color:var(--gold3)">21</div>
+              <div class="cal-stat-lbl">Perfect Days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MID CTA -->
+<section class="mid-cta">
+  <div class="mid-cta-bg"></div>
+  <div class="mid-cta-inner">
+    <div class="mid-cta-eyebrow reveal">Your new chapter starts now</div>
+    <h2 class="mid-cta-title reveal">You already know what needs to change.</h2>
+    <p class="mid-cta-sub reveal">The only question is whether you'll start today. One habit. That's all it takes.</p>
+    <button class="cta-btn reveal" onclick="window.location.href='/login'">
+      Change your Habit
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-hdr reveal">
+    <h2 class="section-title">How it Works</h2>
+    <p class="section-sub">Four principles. One system. Infinite compounding.</p>
+  </div>
+  <div class="steps-list">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <div>
+        <h3 class="step-title">Name your first habit.</h3>
+        <p class="step-body">Start small. Assign it a focus principle. This shapes the system around it.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">02</div>
+      <div>
+        <h3 class="step-title">Anchor it to what you already do.</h3>
+        <p class="step-body">Attach a new habit to an existing one. The old routine becomes the cue that fires the new one automatically.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">03</div>
+      <div>
+        <h3 class="step-title">Check in every day.</h3>
+        <p class="step-body">One tap. The streak starts. The identity forms.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">04</div>
+      <div>
+        <h3 class="step-title">Watch the analytics compound.</h3>
+        <p class="step-body">Heatmaps, streaks, completion by principle. Visual proof you're becoming who you said you would.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">05</div>
+      <div>
+        <h3 class="step-title">Add more. Stack deeper. Go further.</h3>
+        <p class="step-body">One habit becomes a system. A system becomes a life.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-hdr reveal">
+    <h2 class="section-title">FAQ</h2>
+    <p class="section-sub">Things people ask before they decide to begin.</p>
+  </div>
+  <div class="faq-list" id="faq-list"></div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-hdr reveal">
+    <h2 class="section-title">Contact</h2>
+    <p class="section-sub">We read every message. Expect a real human reply within 24 hours.</p>
+  </div>
+  <div class="contact-grid">
+    <form class="contact-form" onsubmit="return false">
+      <div>
+        <label class="field-label">Your Name</label>
+        <input class="field-input" type="text" placeholder="Your name" autocomplete="name">
+      </div>
+      <div>
+        <label class="field-label">&#9675;</label>
+        <input class="field-input" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div>
+        <label class="field-label">Message</label>
+        <textarea class="field-textarea" placeholder="Tell us what's on your mind..."></textarea>
+      </div>
+      <button class="submit-btn" type="submit">Send Message</button>
+    </form>
+    <div>
+      <p class="contact-headline">We're on the same team. Your success is our product.</p>
+      <div class="contact-detail">
+        <span class="contact-icon">&#9675;</span>
+        <div class="contact-text">hello@stackr.app<br><small>Replies within 24 hours</small></div>
+      </div>
+      <div class="contact-detail">
+        <span class="contact-icon">&#9675;</span>
+        <div class="contact-text">Based in the internet.<br><small>Built for the world.</small></div>
+      </div>
+      <div class="contact-detail">
+        <span class="contact-icon">&#9675;</span>
+        <div class="contact-text">Feature requests welcome.<br><small>We build what you need.</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="footer-logo" href="#" aria-label="Stackr">
+    <svg width="72" height="32" viewBox="0 0 152 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block;overflow:visible">
+      <defs>
+        <linearGradient id="fBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"  stop-color="#1E4D30"/>
+          <stop offset="50%" stop-color="#2F6B43"/>
+          <stop offset="100%" stop-color="#5A9E72"/>
+        </linearGradient>
+      </defs>
+      <rect x="20" y="0"  width="120" height="6" rx="1.5" fill="url(#fBarGrad)" opacity="0.62"/>
+      <rect x="8"  y="11" width="120" height="6" rx="1.5" fill="url(#fBarGrad)" opacity="0.72"/>
+      <rect x="28" y="22" width="120" height="6" rx="1.5" fill="url(#fBarGrad)" opacity="0.84"/>
+      <rect x="4"  y="33" width="120" height="6" rx="1.5" fill="url(#fBarGrad)" opacity="0.93"/>
+      <rect x="14" y="44" width="120" height="6" rx="1.5" fill="url(#fBarGrad)" opacity="1.00"/>
+    </svg>
+  </a>
+  <nav class="footer-nav" aria-label="Footer">
+    <a class="footer-link" href="#how">How it Works</a>
+    <a class="footer-link" href="#faq">FAQ</a>
+    <a class="footer-link" href="#contact">Contact</a>
+  </nav>
+  <p class="footer-tagline">Built for the person you're becoming.</p>
+</footer>
+
+<script>
+const nav = document.getElementById('main-nav');
+const banners = document.querySelectorAll('.banner');
+
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+  checkReveal();
+  updateParallax();
+}, { passive: true });
+
+function checkReveal() {
+  document.querySelectorAll('.reveal').forEach(el => {
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.88)
+      el.classList.add('visible');
+  });
+}
+
+function updateParallax() {
+  banners.forEach(banner => {
+    const rect = banner.getBoundingClientRect();
+    const progress = (window.innerHeight / 2 - rect.top) / window.innerHeight;
+    const inner = banner.querySelector('.banner-inner');
+    if (inner) inner.style.transform = `translateY(${progress * 28}px)`;
+  });
+}
+
+// Streak count-up
+let streakAnimated = false;
+const streakObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !streakAnimated) {
+      streakAnimated = true;
+      streakObs.disconnect();
+      const el = document.getElementById('streak-num');
+      const dotsEl = document.getElementById('streak-dots');
+      let n = 0;
+      const iv = setInterval(() => {
+        n++;
+        el.textContent = n;
+        if (n >= 21) {
+          clearInterval(iv);
+          let html = '';
+          for (let i = 0; i < 21; i++) html += '<div class="streak-dot lit"></div>';
+          for (let i = 0; i < 7; i++) html += '<div class="streak-dot unlit"></div>';
+          dotsEl.innerHTML = html;
+        }
+      }, 40);
+    }
+  });
+}, { threshold: 0.4 });
+const b1 = document.getElementById('banner-1');
+if (b1) streakObs.observe(b1);
+
+// Bar chart animation on scroll into view
+let barsAnimated = false;
+const barsObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !barsAnimated) {
+      barsAnimated = true;
+      barsObs.disconnect();
+      document.getElementById('mini-bars').classList.add('animated');
+    }
+  });
+}, { threshold: 0.3 });
+const b3 = document.getElementById('banner-3');
+if (b3) barsObs.observe(b3);
+
+// Heatmap
+function initHeatmap() {
+  const el = document.getElementById('mini-heatmap');
+  if (!el) return;
+  for (let i = 0; i < 70; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'hm-cell';
+    const r = Math.random();
+    if (r >= 0.20 && r < 0.45) cell.classList.add('hm-l1');
+    else if (r >= 0.45 && r < 0.75) cell.classList.add('hm-l2');
+    else if (r >= 0.75) cell.classList.add('hm-l3');
+    el.appendChild(cell);
+  }
+}
+
+// Calendar
+function initCalendar() {
+  const el = document.getElementById('mini-cal');
+  if (!el) return;
+  const today = new Date().getDate();
+  for (let d = 1; d <= 30; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    cell.textContent = d;
+    if (d < today) {
+      cell.classList.add(Math.random() < 0.85 ? 'cal-filled' : 'cal-faint');
+    } else if (d === today) {
+      cell.classList.add('cal-today');
+    } else {
+      cell.classList.add('cal-future');
+    }
+    el.appendChild(cell);
+  }
+}
+
+// FAQ
+const FAQS = [
+  { q: 'Where does the Stackr system come from?', a: 'Stackr is built on behavioral science: make habits clear, appealing, simple, and rewarding. These four principles are grounded in decades of psychology research -- not tied to any single book or author.' },
+  { q: 'Do I need to know anything about habit science to use it?', a: 'Not at all. The app guides you through the principles as you build. Most people feel the system click within the first week.' },
+  { q: 'Does it work offline?', a: 'Yes. Your data is stored locally in your browser. No account, no cloud sync, no internet required after the first load.' },
+  { q: 'Can I track habits I\'m trying to break?', a: "Absolutely. Frame it as the positive opposite -- 'No screens before 8am' is a valid habit. The same principles apply equally to building good habits and eliminating bad ones." },
+  { q: 'What does anchoring a habit mean?', a: "Attaching a new habit to something you already do automatically. 'After I pour my morning coffee, I will read for 10 minutes.' The old routine becomes the trigger for the new one." },
+  { q: 'Will my data persist if I close the browser?', a: "Yes -- as long as you don't clear localStorage, everything is saved between sessions permanently." },
+];
+
+function initFAQ() {
+  const el = document.getElementById('faq-list');
+  if (!el) return;
+  el.innerHTML = FAQS.map(f => `
+    <div class="faq-item reveal">
+      <div class="faq-q-row">
+        <span class="faq-q-text">${f.q}</span>
+        <span class="faq-arrow">+</span>
+      </div>
+      <div class="faq-a">${f.a}</div>
+    </div>`).join('');
+  el.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-q-row').addEventListener('click', () => item.classList.toggle('open'));
+  });
+}
+
+function init() {
+  initFAQ();
+  initHeatmap();
+  initCalendar();
+  checkReveal();
+  setTimeout(checkReveal, 300);
+}
+
+init();
+</script>
+<script src="intro.js"></script>
+</body>
+</html>
+
+

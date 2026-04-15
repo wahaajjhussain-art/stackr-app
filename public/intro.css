@@ -1,0 +1,166 @@
+/* =====================================================
+   STACKR — Animated Intro & Logo System
+   Phases: Phase1 Dark | Phase2 Build | Phase3 Align
+           Phase4 Glow  | Phase5 Reveal
+   ===================================================== */
+
+
+/* ---- Overlay ---- */
+
+#stackr-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 20, 15, 0.97);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  pointer-events: all;
+}
+
+/* Fallback: browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  #stackr-intro { background: rgba(22, 20, 15, 1); }
+}
+
+/* Phase 5: overlay fades, blur lifts */
+#stackr-intro.s-fade-out {
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition:
+    opacity             0.9s cubic-bezier(0.4, 0, 0.2, 1),
+    backdrop-filter     0.9s cubic-bezier(0.4, 0, 0.2, 1),
+    -webkit-backdrop-filter 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cleanup: remove from paint tree after animation */
+#stackr-intro.s-done {
+  display: none;
+}
+
+
+/* ---- Center stage ---- */
+
+#intro-center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  transition:
+    transform 0.85s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity   0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Phase 5: logo contracts upward */
+#intro-center.s-exit {
+  transform: scale(0.80) translateY(-16px);
+  opacity: 0;
+}
+
+
+/* ---- Intro SVG (large, 5-bar version) ---- */
+
+#intro-svg {
+  width: 220px;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* Each bar group starts invisible; JS manages transforms */
+.ibar {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+
+/* ---- Wordmark ---- */
+
+#intro-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(90, 158, 114, 0.58);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  user-select: none;
+  padding-left: 1px;
+}
+
+#intro-label.s-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* ---- Glow halo (Phase 4) ---- */
+
+#intro-glow {
+  position: absolute;
+  inset: -32px -44px;
+  border-radius: 12px;
+  background: radial-gradient(
+    ellipse 260px 160px at 50% 50%,
+    rgba(47, 107, 67, 0.10) 0%,
+    transparent 65%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+
+#intro-glow.s-active {
+  opacity: 1;
+}
+
+
+/* ---- Navbar Logo (final static state) ---- */
+
+.s-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* SVG icon — 4 bars, small */
+.s-nav-icon {
+  width: 32px;
+  height: auto;
+  display: block;
+  overflow: visible;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.s-nav-icon.s-visible {
+  opacity: 1;
+}
+
+/* "STACKR" wordmark in nav */
+.s-nav-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #F6F1E8;
+  opacity: 0;
+  transition: opacity 0.5s ease 0.12s;
+  user-select: none;
+}
+
+.s-nav-name.s-visible {
+  opacity: 1;
+}
