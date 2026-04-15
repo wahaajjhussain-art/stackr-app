@@ -129,100 +129,68 @@ const NAV_SECTIONS = [
    SIDEBAR
    ════════════════════════════════════════════════════ */
 function Sidebar({ active, setActive }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const NavItems = ({ onSelect }) => (
+    <nav style={{ flex: 1, padding: "0 0.75rem" }}>
+      {NAV_SECTIONS.map((section, si) => (
+        <div key={si} style={{ marginBottom: "1.5rem" }}>
+          {section.label && (
+            <div style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "2.5px", textTransform: "uppercase", color: DIM, padding: "0 0.75rem", marginBottom: "0.4rem" }}>
+              {section.label}
+            </div>
+          )}
+          {section.items.map((item) => {
+            const isActive = active === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => { setActive(item.id); onSelect?.(); }}
+                style={{ display: "block", width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", borderRadius: "6px", background: isActive ? "var(--s-faint)" : "transparent", border: "none", color: isActive ? PARCHMENT : MUTED, fontFamily: SANS, fontSize: "13px", fontWeight: isActive ? 500 : 400, cursor: "pointer", transition: "all 0.15s", letterSpacing: "0.1px" }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = PARCHMENT; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = MUTED; }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+
   return (
-    <aside
-      style={{
-        width: "210px",
-        flexShrink: 0,
-        borderRight: `1px solid ${BORDER}`,
-        display: "flex",
-        flexDirection: "column",
-        padding: "2rem 0",
-        position: "sticky",
-        top: 0,
-        height: "100vh",
-        overflowY: "auto",
-      }}
-    >
-      {/* Logo */}
-      <div
-        style={{
-          padding: "0 1.5rem 2rem",
-          borderBottom: `1px solid ${BORDER}`,
-          marginBottom: "1.5rem",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: SERIF,
-            fontStyle: "italic",
-            fontSize: "20px",
-            fontWeight: 400,
-            color: PARCHMENT,
-            letterSpacing: "0.3px",
-          }}
-        >
-          Stackr
-        </span>
+    <>
+      {/* ── Desktop sidebar ── */}
+      <aside className="stackr-sidebar" style={{ width: "210px", flexShrink: 0, borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", padding: "2rem 0", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+        <div style={{ padding: "0 1.5rem 2rem", borderBottom: `1px solid ${BORDER}`, marginBottom: "1.5rem" }}>
+          <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "20px", fontWeight: 400, color: PARCHMENT, letterSpacing: "0.3px" }}>Stackr</span>
+        </div>
+        <NavItems />
+      </aside>
+
+      {/* ── Mobile top bar ── */}
+      <div className="stackr-topbar" style={{ display: "none", position: "fixed", top: 0, left: 0, right: 0, height: "52px", background: INK, borderBottom: `1px solid ${BORDER}`, alignItems: "center", justifyContent: "space-between", padding: "0 1rem", zIndex: 300 }}>
+        <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "19px", fontWeight: 400, color: PARCHMENT }}>Stackr</span>
+        <button onClick={() => setDrawerOpen(true)} style={{ background: "none", border: "none", color: PARCHMENT, cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
       </div>
 
-      {/* Nav */}
-      <nav style={{ flex: 1, padding: "0 0.75rem" }}>
-        {NAV_SECTIONS.map((section, si) => (
-          <div key={si} style={{ marginBottom: "1.5rem" }}>
-            {section.label && (
-              <div
-                style={{
-                  fontSize: "9px",
-                  fontWeight: 500,
-                  letterSpacing: "2.5px",
-                  textTransform: "uppercase",
-                  color: DIM,
-                  padding: "0 0.75rem",
-                  marginBottom: "0.4rem",
-                }}
-              >
-                {section.label}
-              </div>
-            )}
-            {section.items.map((item) => {
-              const isActive = active === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActive(item.id)}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "0.5rem 0.75rem",
-                    borderRadius: "6px",
-                    background: isActive ? "var(--s-faint)" : "transparent",
-                    border: "none",
-                    color: isActive ? PARCHMENT : MUTED,
-                    fontFamily: SANS,
-                    fontSize: "13px",
-                    fontWeight: isActive ? 500 : 400,
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                    letterSpacing: "0.1px",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.color = PARCHMENT;
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.color = MUTED;
-                  }}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+      {/* ── Mobile drawer ── */}
+      {drawerOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 400 }} onClick={() => setDrawerOpen(false)}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} />
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "240px", background: INK2, borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", padding: "1.5rem 0", overflowY: "auto", animation: "slideInLeft 0.22s ease" }}>
+            <div style={{ padding: "0 1.5rem 1.5rem", borderBottom: `1px solid ${BORDER}`, marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "19px", fontWeight: 400, color: PARCHMENT }}>Stackr</span>
+              <button onClick={() => setDrawerOpen(false)} style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>✕</button>
+            </div>
+            <NavItems onSelect={() => setDrawerOpen(false)} />
           </div>
-        ))}
-      </nav>
-
-    </aside>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -2589,7 +2557,15 @@ export default function HabitTracker() {
           60%  { transform:translate(0,0) scale(1.05); opacity:1; }
           100% { transform:translate(0,0) scale(3.8); opacity:0; }
         }
+        @keyframes slideInLeft { from{transform:translateX(-100%)} to{transform:translateX(0)} }
         .habit-row { transition: all 0.18s; }
+        @media (max-width: 680px) {
+          .stackr-sidebar { display: none !important; }
+          .stackr-topbar { display: flex !important; }
+          .stackr-main { padding-top: 52px !important; padding-bottom: 72px !important; }
+          .stackr-bottom-nav { display: flex !important; }
+          .stackr-gear { bottom: 72px !important; }
+        }
       `}</style>
 
       {/* Theme transition animation */}
@@ -2639,12 +2615,31 @@ export default function HabitTracker() {
         setActive={setActiveView}
       />
 
-      <main style={{ flex: 1, overflowY: "auto", minWidth: 0 }}>
+      <main className="stackr-main" style={{ flex: 1, overflowY: "auto", minWidth: 0 }}>
         {renderView()}
       </main>
 
+      {/* ── Mobile bottom nav ── */}
+      <div className="stackr-bottom-nav" style={{ display: "none", position: "fixed", bottom: 0, left: 0, right: 0, height: "60px", background: INK2, borderTop: `1px solid ${BORDER}`, alignItems: "center", justifyContent: "space-around", zIndex: 299, padding: "0 4px" }}>
+        {[
+          { id: "dashboard", label: "Home", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+          { id: "all-habits", label: "Habits", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+          { id: "daily", label: "Today", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.8"/><line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="1.8"/></svg> },
+          { id: "analytics", label: "Stats", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+          { id: "intention", label: "Plan", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+        ].map(({ id, label, icon }) => {
+          const isActive = activeView === id;
+          return (
+            <button key={id} onClick={() => setActiveView(id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "3px", background: "none", border: "none", color: isActive ? ACCENT3 : DIM, cursor: "pointer", fontSize: "9px", fontFamily: SANS, fontWeight: isActive ? 600 : 400, letterSpacing: "0.5px", textTransform: "uppercase", padding: "4px 0", transition: "color 0.15s" }}>
+              {icon}
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Gear button — fixed bottom-right */}
-      <div ref={settingsRef} style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 201 }}>
+      <div ref={settingsRef} className="stackr-gear" style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 201 }}>
         <button
           onClick={() => setShowSettings((v) => !v)}
           title="Settings"
