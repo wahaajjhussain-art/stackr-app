@@ -5,6 +5,7 @@ const PARCHMENT = "var(--s-text)";
 const DIM       = "var(--s-dim)";
 const MUTED     = "var(--s-muted)";
 const BORDER2   = "var(--s-border2)";
+const GOLD3     = "#E8B84B";
 const SANS      = "'DM Sans', sans-serif";
 
 /*
@@ -32,9 +33,9 @@ export default function RestartPrompt({ missedHabits, dismissed, onDismiss, onAd
         <div
           key={habit.id}
           style={{
-            background: "rgba(22,20,15,0.7)",
-            border: "1px solid rgba(246,241,232,0.1)",
-            borderLeft: "2px solid rgba(232,184,75,0.35)",
+            background: "var(--s-card-bg)",
+            border: `1px solid ${BORDER2}`,
+            borderLeft: `2px solid rgba(232,184,75,0.55)`,
             borderRadius: "10px",
             padding: "1rem 1.1rem",
           }}
@@ -48,10 +49,10 @@ export default function RestartPrompt({ missedHabits, dismissed, onDismiss, onAd
             }}
           >
             <div>
-              <div style={{ fontSize: "12px", color: PARCHMENT, marginBottom: "2px" }}>
+              <div style={{ fontSize: "13px", fontWeight: 500, color: PARCHMENT, marginBottom: "3px" }}>
                 {habit.name}
               </div>
-              <div style={{ fontSize: "11px", color: MUTED }}>
+              <div style={{ fontSize: "12px", color: MUTED }}>
                 Missed {daysMissed} day{daysMissed > 1 ? "s" : ""}. You slipped. Reset and continue.
               </div>
             </div>
@@ -62,9 +63,9 @@ export default function RestartPrompt({ missedHabits, dismissed, onDismiss, onAd
                 border: "none",
                 color: DIM,
                 cursor: "pointer",
-                fontSize: "15px",
+                fontSize: "16px",
                 lineHeight: 1,
-                padding: "0 2px",
+                padding: "0 4px",
                 transition: "color 0.15s",
                 flexShrink: 0,
               }}
@@ -100,7 +101,7 @@ export default function RestartPrompt({ missedHabits, dismissed, onDismiss, onAd
                   letterSpacing: "0.2px",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(246,241,232,0.28)";
+                  e.currentTarget.style.borderColor = "var(--s-strong)";
                   e.currentTarget.style.color = PARCHMENT;
                 }}
                 onMouseLeave={(e) => {
