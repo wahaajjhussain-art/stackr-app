@@ -3205,25 +3205,25 @@ export default function HabitTracker() {
           --crgb:            246,241,232;
         }
         [data-theme="light"] {
-          --s-bg:            #F0E9DA;
-          --s-bg2:           #E5DDD0;
-          --s-text:          #1C1A14;
-          --s-border:        rgba(22,20,15,0.11);
-          --s-border2:       rgba(22,20,15,0.18);
-          --s-muted:         rgba(22,20,15,0.46);
-          --s-dim:           rgba(22,20,15,0.34);
-          --s-faint:         rgba(22,20,15,0.08);
-          --s-subtle:        rgba(22,20,15,0.24);
-          --s-strong:        rgba(22,20,15,0.74);
-          --s-ghost:         rgba(22,20,15,0.20);
-          --s-card-bg:       rgba(22,20,15,0.055);
-          --s-input-bg:      rgba(22,20,15,0.055);
-          --s-input-border:  rgba(22,20,15,0.15);
-          --s-scrollbar:     rgba(22,20,15,0.15);
-          --s-placeholder:   rgba(22,20,15,0.30);
-          --s-select-bg:     #D5CBBA;
-          --s-overlay:       rgba(22,20,15,0.62);
-          --crgb:            22,20,15;
+          --s-bg:            #D4CCC0;
+          --s-bg2:           #C9C0B2;
+          --s-text:          #1A1813;
+          --s-border:        rgba(26,24,19,0.16);
+          --s-border2:       rgba(26,24,19,0.26);
+          --s-muted:         rgba(26,24,19,0.58);
+          --s-dim:           rgba(26,24,19,0.42);
+          --s-faint:         rgba(26,24,19,0.07);
+          --s-subtle:        rgba(26,24,19,0.22);
+          --s-strong:        rgba(26,24,19,0.84);
+          --s-ghost:         rgba(26,24,19,0.16);
+          --s-card-bg:       rgba(26,24,19,0.07);
+          --s-input-bg:      rgba(26,24,19,0.06);
+          --s-input-border:  rgba(26,24,19,0.20);
+          --s-scrollbar:     rgba(26,24,19,0.18);
+          --s-placeholder:   rgba(26,24,19,0.36);
+          --s-select-bg:     #B8AFA0;
+          --s-overlay:       rgba(26,24,19,0.65);
+          --crgb:            26,24,19;
         }
         *,*::before,*::after { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; }
