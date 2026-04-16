@@ -1482,6 +1482,7 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
   const [syncDuration,  setSyncDuration]  = useState(h.gcalSync?.duration  || 30);
   const [syncFrequency, setSyncFrequency] = useState(h.gcalSync?.frequency || "DAILY");
   const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState(null);
   const synced = !!h.gcalEventId;
 
   function submitNote() {
@@ -1512,13 +1513,21 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
   async function submitSync() {
     if (!syncTime || syncing) return;
     setSyncing(true);
+    setSyncError(null);
     const config = { time: syncTime, duration: syncDuration, frequency: syncFrequency };
     if (onCalendarSync) {
-      await onCalendarSync(h.id, syncEditing ? "update" : "create", config);
+      try {
+        await onCalendarSync(h.id, syncEditing ? "update" : "create", config);
+        setSyncing(false);
+        setShowSyncConfig(false);
+        setSyncEditing(false);
+      } catch (err) {
+        setSyncing(false);
+        setSyncError(err.message || "Something went wrong. Please try again.");
+      }
+    } else {
+      setSyncing(false);
     }
-    setSyncing(false);
-    setShowSyncConfig(false);
-    setSyncEditing(false);
   }
 
   return (
@@ -1763,12 +1772,19 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
                       {syncing ? "Saving…" : syncEditing ? "Update Event" : "Add to Calendar"}
                     </button>
                     <button
-                      onClick={() => { setShowSyncConfig(false); setSyncEditing(false); }}
+                      onClick={() => { setShowSyncConfig(false); setSyncEditing(false); setSyncError(null); }}
                       style={{ background: "none", border: "none", color: DIM, fontFamily: SANS, fontSize: "11px", cursor: "pointer" }}
                     >
                       Cancel
                     </button>
                   </div>
+
+                  {/* Error message */}
+                  {syncError && (
+                    <div style={{ fontSize: "11px", color: "rgba(220,100,100,0.85)", marginTop: "4px", lineHeight: 1.45 }}>
+                      {syncError}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2772,33 +2788,36 @@ export default function HabitTracker() {
   }
 
   /* ── Google Calendar integration ── */
-  function requestCalendarAccess(callback) {
-    if (!gisReady || !window.google?.accounts?.oauth2) {
-      console.error("GIS not ready yet — gisReady:", gisReady, "window.google:", !!window.google);
-      alert("Google sign-in library is still loading. Please wait a moment and try again.");
-      return;
-    }
-    const isExpired = !gcalToken || Date.now() >= gcalTokenExpiry - 60_000;
-    if (!isExpired) {
-      callback(gcalToken);
-      return;
-    }
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      scope: "https://www.googleapis.com/auth/calendar.events",
-      callback: (resp) => {
-        if (resp.error) {
-          console.error("Calendar OAuth error:", resp.error);
-          return;
-        }
-        const tok = resp.access_token;
-        const exp = Date.now() + (resp.expires_in || 3600) * 1000;
-        setGcalToken(tok);
-        setGcalTokenExpiry(exp);
-        callback(tok);
-      },
+  /* Converts OAuth token request to a Promise so handleCalendarSync can await it */
+  function requestCalendarAccess() {
+    return new Promise((resolve, reject) => {
+      if (!gisReady || !window.google?.accounts?.oauth2) {
+        reject(new Error("Google sign-in is still loading — please wait a second and try again."));
+        return;
+      }
+      const isExpired = !gcalToken || Date.now() >= gcalTokenExpiry - 60_000;
+      if (!isExpired) { resolve(gcalToken); return; }
+      /* NEXT_PUBLIC_ vars are only inlined at build time; fall back to literal for Vercel */
+      const clientId =
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+        "391307255582-glhceinhll3s9qqj167b8mhcrj03kpvt.apps.googleusercontent.com";
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "https://www.googleapis.com/auth/calendar.events",
+        callback: (resp) => {
+          if (resp.error) {
+            reject(new Error(resp.error_description || resp.error));
+            return;
+          }
+          const tok = resp.access_token;
+          const exp = Date.now() + (resp.expires_in || 3600) * 1000;
+          setGcalToken(tok);
+          setGcalTokenExpiry(exp);
+          resolve(tok);
+        },
+      });
+      client.requestAccessToken({ prompt: "" });
     });
-    client.requestAccessToken({ prompt: "" });
   }
 
   async function handleCalendarSync(habitId, action, syncConfig, habitOverride) {
@@ -2807,57 +2826,55 @@ export default function HabitTracker() {
     if (!habit) return;
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    requestCalendarAccess(async (token) => {
-      if (action === "create") {
-        const res = await fetch("/api/calendar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "create",
-            token,
-            habit: { ...habit, gcalSync: syncConfig },
-            timezone,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) { console.error("Calendar create failed:", data.error); return; }
-        const updated = { ...habit, gcalEventId: data.eventId, gcalSync: syncConfig };
-        setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
-        if (userId) updateHabitDb(userId, habitId, { gcalEventId: data.eventId, gcalSync: syncConfig });
+    /* requestCalendarAccess now returns a Promise — we can await it properly */
+    const token = await requestCalendarAccess();
 
-      } else if (action === "update" && habit.gcalEventId) {
-        const res = await fetch("/api/calendar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "update",
-            token,
-            eventId: habit.gcalEventId,
-            habit: { ...habit, gcalSync: syncConfig },
-            timezone,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) { console.error("Calendar update failed:", data.error); return; }
-        const updated = { ...habit, gcalSync: syncConfig };
-        setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
-        if (userId) updateHabitDb(userId, habitId, { gcalSync: syncConfig });
+    if (action === "create") {
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          token,
+          habit: { ...habit, gcalSync: syncConfig },
+          timezone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Calendar create failed");
+      const updated = { ...habit, gcalEventId: data.eventId, gcalSync: syncConfig };
+      setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
+      if (userId) updateHabitDb(userId, habitId, { gcalEventId: data.eventId, gcalSync: syncConfig });
 
-      } else if (action === "delete" && habit.gcalEventId) {
-        const res = await fetch("/api/calendar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "delete", token, eventId: habit.gcalEventId }),
-        });
-        if (res.ok) {
-          const updated = { ...habit, gcalEventId: null, gcalSync: null };
-          setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
-          if (userId) updateHabitDb(userId, habitId, { gcalEventId: null, gcalSync: null });
-        } else {
-          console.error("Calendar delete failed");
-        }
-      }
-    });
+    } else if (action === "update" && habit.gcalEventId) {
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          token,
+          eventId: habit.gcalEventId,
+          habit: { ...habit, gcalSync: syncConfig },
+          timezone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Calendar update failed");
+      const updated = { ...habit, gcalSync: syncConfig };
+      setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
+      if (userId) updateHabitDb(userId, habitId, { gcalSync: syncConfig });
+
+    } else if (action === "delete" && habit.gcalEventId) {
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", token, eventId: habit.gcalEventId }),
+      });
+      if (!res.ok) throw new Error("Calendar delete failed");
+      const updated = { ...habit, gcalEventId: null, gcalSync: null };
+      setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
+      if (userId) updateHabitDb(userId, habitId, { gcalEventId: null, gcalSync: null });
+    }
   }
 
   function handleThemeChange(next) {
