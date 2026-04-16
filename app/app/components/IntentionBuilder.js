@@ -308,8 +308,8 @@ function EditIntentionModal({ intention, habits, onSave, onClose }) {
   );
 }
 
-/* Props: { habits, intentions, setIntentions, userId } */
-export default function IntentionBuilderView({ habits, intentions, setIntentions, userId }) {
+/* Props: { habits, intentions, setIntentions, userId, onCalendarSync, onError } */
+export default function IntentionBuilderView({ habits, intentions, setIntentions, userId, onCalendarSync, onError }) {
   const [step, setStep] = useState(1);
   const [time, setTime]         = useState("");
   const [habitId, setHabitId]   = useState("");
@@ -317,6 +317,34 @@ export default function IntentionBuilderView({ habits, intentions, setIntentions
   const [locInput, setLocInput] = useState("");
   const [saved, setSaved]       = useState(false);
   const [editing, setEditing]   = useState(null); // the intention being edited
+
+  // Calendar sync panel state
+  const [calPanelId, setCalPanelId] = useState(null);
+  const [calDur, setCalDur]         = useState(30);
+  const [calFreq, setCalFreq]       = useState("DAILY");
+  const [calSyncing, setCalSyncing] = useState(false);
+
+  async function submitCalSync(intentionId) {
+    if (!onCalendarSync || calSyncing) return;
+    setCalSyncing(true);
+    try {
+      await onCalendarSync(intentionId, "create", { duration: calDur, frequency: calFreq });
+      setCalPanelId(null);
+    } catch (err) {
+      if (onError) onError(err, "Intention calendar sync");
+    } finally {
+      setCalSyncing(false);
+    }
+  }
+
+  async function removeCalSync(intentionId) {
+    if (!onCalendarSync) return;
+    try {
+      await onCalendarSync(intentionId, "delete", {});
+    } catch (err) {
+      if (onError) onError(err, "Intention calendar remove");
+    }
+  }
 
   const selectedHabit = habits.find((h) => h.id === habitId);
   const finalLocation = location === "__custom__" ? locInput : location;
@@ -571,57 +599,187 @@ export default function IntentionBuilderView({ habits, intentions, setIntentions
               <div
                 key={i.id}
                 style={{
-                  padding: "0.9rem 1.1rem",
                   background: "rgba(246,241,232,0.025)",
                   border: `1px solid ${BORDER}`,
                   borderRadius: "8px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: "1rem",
+                  overflow: "hidden",
                 }}
               >
-                <p
-                  style={{
-                    fontFamily: SERIF,
-                    fontStyle: "italic",
-                    fontSize: "14px",
-                    color: MUTED,
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  &ldquo;{i.sentence}&rdquo;
-                </p>
-                <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                  {/* Edit icon */}
-                  <button
-                    onClick={() => setEditing(i)}
-                    style={{ background: "none", border: "none", color: DIM, cursor: "pointer", padding: "3px", display: "flex", alignItems: "center", transition: "color 0.15s" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = PARCHMENT)}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = DIM)}
-                    aria-label="Edit intention"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M7.5 3.5L10.5 6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                  {/* Delete icon */}
-                  <button
-                    onClick={() => {
-                      const next = intentions.filter((x) => x.id !== i.id);
-                      setIntentions(next);
-                      if (userId) deleteIntentionDb(userId, i.id);
+                {/* Main row */}
+                <div style={{ padding: "0.9rem 1.1rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+                  <p
+                    style={{
+                      fontFamily: SERIF,
+                      fontStyle: "italic",
+                      fontSize: "14px",
+                      color: MUTED,
+                      lineHeight: 1.6,
+                      margin: 0,
                     }}
-                    style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontSize: "15px", lineHeight: 1, padding: "0 2px", transition: "color 0.15s" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(220,100,100,0.7)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = DIM)}
-                    aria-label="Remove"
                   >
-                    ×
-                  </button>
+                    &ldquo;{i.sentence}&rdquo;
+                  </p>
+                  <div style={{ display: "flex", gap: "6px", flexShrink: 0, alignItems: "center" }}>
+                    {/* Google Calendar toggle button */}
+                    {onCalendarSync && (
+                      i.gcalEventId ? (
+                        /* Already synced — show badge + remove */
+                        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                          <span style={{ fontSize: "9px", letterSpacing: "1.5px", textTransform: "uppercase", color: ACCENT3 }}>Synced</span>
+                          <button
+                            onClick={() => removeCalSync(i.id)}
+                            style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontSize: "13px", lineHeight: 1, padding: "0 2px", transition: "color 0.15s" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(220,100,100,0.7)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = DIM)}
+                            aria-label="Remove calendar sync"
+                          >×</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setCalPanelId(calPanelId === i.id ? null : i.id); setCalDur(30); setCalFreq("DAILY"); }}
+                          title="Add to Google Calendar"
+                          style={{
+                            background: calPanelId === i.id ? "rgba(90,158,114,0.12)" : "none",
+                            border: `1px solid ${calPanelId === i.id ? ACCENT3 : "transparent"}`,
+                            borderRadius: "5px",
+                            padding: "3px 5px",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            transition: "all 0.15s",
+                          }}
+                          onMouseEnter={(e) => { if (calPanelId !== i.id) { e.currentTarget.style.background = "rgba(246,241,232,0.06)"; }}}
+                          onMouseLeave={(e) => { if (calPanelId !== i.id) { e.currentTarget.style.background = "none"; }}}
+                          aria-label="Add to Google Calendar"
+                        >
+                          {/* Google Calendar mini icon */}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="4" width="18" height="17" rx="2" stroke={ACCENT3} strokeWidth="1.5"/>
+                            <path d="M3 9h18" stroke={ACCENT3} strokeWidth="1.5"/>
+                            <path d="M8 2v4M16 2v4" stroke={ACCENT3} strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                      )
+                    )}
+                    {/* Edit icon */}
+                    <button
+                      onClick={() => setEditing(i)}
+                      style={{ background: "none", border: "none", color: DIM, cursor: "pointer", padding: "3px", display: "flex", alignItems: "center", transition: "color 0.15s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = PARCHMENT)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = DIM)}
+                      aria-label="Edit intention"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M7.5 3.5L10.5 6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                    {/* Delete icon */}
+                    <button
+                      onClick={() => {
+                        const next = intentions.filter((x) => x.id !== i.id);
+                        setIntentions(next);
+                        if (userId) deleteIntentionDb(userId, i.id);
+                      }}
+                      style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontSize: "15px", lineHeight: 1, padding: "0 2px", transition: "color 0.15s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(220,100,100,0.7)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = DIM)}
+                      aria-label="Remove"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
+
+                {/* Calendar sync expand panel */}
+                {calPanelId === i.id && !i.gcalEventId && (
+                  <div style={{
+                    borderTop: `1px solid ${BORDER}`,
+                    padding: "1rem 1.1rem",
+                    background: "rgba(30,77,48,0.06)",
+                    animation: "slideUp 0.18s ease",
+                  }}>
+                    <p style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "2.5px", textTransform: "uppercase", color: GOLD3, marginBottom: "0.7rem" }}>
+                      Add to Google Calendar
+                    </p>
+
+                    {/* Duration */}
+                    <div style={{ marginBottom: "0.75rem" }}>
+                      <p style={{ fontSize: "11px", color: DIM, marginBottom: "6px" }}>Duration</p>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {[15, 30, 45, 60].map((d) => (
+                          <button
+                            key={d}
+                            onClick={() => setCalDur(d)}
+                            style={{
+                              padding: "0.3rem 0.75rem",
+                              border: `1px solid ${calDur === d ? ACCENT3 : BORDER2}`,
+                              borderRadius: "50px",
+                              background: calDur === d ? "rgba(90,158,114,0.12)" : "transparent",
+                              color: calDur === d ? PARCHMENT : MUTED,
+                              fontFamily: SANS, fontSize: "12px", cursor: "pointer", transition: "all 0.12s",
+                            }}
+                          >{d} min</button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Repeat */}
+                    <div style={{ marginBottom: "0.9rem" }}>
+                      <p style={{ fontSize: "11px", color: DIM, marginBottom: "6px" }}>Repeat</p>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {[["DAILY","Daily"],["WEEKDAYS","Weekdays"],["WEEKLY","Weekly"]].map(([val, label]) => (
+                          <button
+                            key={val}
+                            onClick={() => setCalFreq(val)}
+                            style={{
+                              padding: "0.3rem 0.75rem",
+                              border: `1px solid ${calFreq === val ? ACCENT3 : BORDER2}`,
+                              borderRadius: "50px",
+                              background: calFreq === val ? "rgba(90,158,114,0.12)" : "transparent",
+                              color: calFreq === val ? PARCHMENT : MUTED,
+                              fontFamily: SANS, fontSize: "12px", cursor: "pointer", transition: "all 0.12s",
+                            }}
+                          >{label}</button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => submitCalSync(i.id)}
+                        disabled={calSyncing}
+                        style={{
+                          padding: "0.5rem 1.25rem",
+                          background: ACCENT, border: `1px solid ${ACCENT2}`,
+                          borderRadius: "50px",
+                          color: PARCHMENT, fontFamily: SANS, fontSize: "12px", fontWeight: 500,
+                          cursor: calSyncing ? "default" : "pointer",
+                          opacity: calSyncing ? 0.5 : 1,
+                          transition: "background 0.2s",
+                        }}
+                        onMouseEnter={(e) => !calSyncing && (e.currentTarget.style.background = ACCENT2)}
+                        onMouseLeave={(e) => !calSyncing && (e.currentTarget.style.background = ACCENT)}
+                      >
+                        {calSyncing ? "Adding…" : "Add to Calendar"}
+                      </button>
+                      <button
+                        onClick={() => setCalPanelId(null)}
+                        style={{
+                          padding: "0.5rem 1rem",
+                          background: "transparent", border: `1px solid ${BORDER2}`,
+                          borderRadius: "50px",
+                          color: MUTED, fontFamily: SANS, fontSize: "12px",
+                          cursor: "pointer", transition: "all 0.15s",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(246,241,232,0.28)"; e.currentTarget.style.color = PARCHMENT; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER2; e.currentTarget.style.color = MUTED; }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

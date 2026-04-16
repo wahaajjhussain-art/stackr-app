@@ -110,6 +110,14 @@ const NAV_SECTIONS = [
     items: [{ id: "dashboard", label: "Dashboard" }],
   },
   {
+    label: null,
+    items: [{ id: "intention", label: "Implementation" }],
+  },
+  {
+    label: null,
+    items: [{ id: "stacking", label: "Stacking" }],
+  },
+  {
     label: "Habits",
     items: [
       { id: "all-habits", label: "All Habits" },
@@ -124,16 +132,11 @@ const NAV_SECTIONS = [
   },
   {
     label: null,
-    items: [{ id: "stacking", label: "Stacking" }],
-  },
-  {
-    label: null,
     items: [{ id: "analytics", label: "Analytics" }],
   },
   {
     label: "Guidance",
     items: [
-      { id: "intention", label: "Implementation" },
       { id: "review", label: "Review" },
     ],
   },
@@ -3053,6 +3056,56 @@ export default function HabitTracker() {
     }
   }
 
+  /* Converts "10:30am" / "2:45pm" → "10:30" / "14:45" for the Calendar API */
+  function intentionTimeTo24h(timeStr) {
+    const match = timeStr?.match(/^(\d{1,2}):(\d{2})(am|pm)$/i);
+    if (!match) return "09:00";
+    let h = parseInt(match[1], 10);
+    const m = match[2];
+    const ampm = match[3].toLowerCase();
+    if (ampm === "am" && h === 12) h = 0;
+    if (ampm === "pm" && h !== 12) h += 12;
+    return `${String(h).padStart(2, "0")}:${m}`;
+  }
+
+  async function handleIntentionCalendarSync(intentionId, action, syncConfig) {
+    const intention = intentions.find((i) => i.id === intentionId);
+    if (!intention) return;
+    const userId = sessionRef.current?.user?.email;
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const token = await requestCalendarAccess();
+
+    if (action === "create") {
+      const habitLike = {
+        id: intentionId,
+        name: intention.habitName,
+        gcalSync: { ...syncConfig, time: intentionTimeTo24h(intention.time) },
+      };
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", token, habit: habitLike, timezone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Calendar create failed");
+      const updated = { ...intention, gcalEventId: data.eventId, gcalSync: syncConfig };
+      setIntentions((prev) => prev.map((i) => (i.id === intentionId ? updated : i)));
+      if (userId) updateIntentionDb(userId, updated);
+      setGcalSuccessVisible(true);
+
+    } else if (action === "delete" && intention.gcalEventId) {
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", token, eventId: intention.gcalEventId }),
+      });
+      if (!res.ok) throw new Error("Calendar delete failed");
+      const updated = { ...intention, gcalEventId: null, gcalSync: null };
+      setIntentions((prev) => prev.map((i) => (i.id === intentionId ? updated : i)));
+      if (userId) updateIntentionDb(userId, updated);
+    }
+  }
+
   function handleThemeChange(next) {
     setPrefs((p) => ({ ...p, theme: next }));
     setThemeAnim(next === "light" ? "to-light" : "to-dark");
@@ -3159,6 +3212,8 @@ export default function HabitTracker() {
               intentions={intentions}
               setIntentions={setIntentions}
               userId={session?.user?.email}
+              onCalendarSync={handleIntentionCalendarSync}
+              onError={reportCalendarError}
             />
           </div>
         );
