@@ -33,8 +33,11 @@ const dmMono = DM_Mono({
 });
 
 export const metadata = {
-  title: "Atomic Habits Tracker",
+  title: "Stackr - Build yourself Better",
   description: "Build the person you want to become.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }) {
