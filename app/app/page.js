@@ -2233,6 +2233,8 @@ export default function HabitTracker() {
   const [activeView, setActiveView] = useState("dashboard");
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef(null);
+  const sessionRef = useRef(null); // always holds latest session for async db calls
+  useEffect(() => { sessionRef.current = session; }, [session]);
   const [intentions, setIntentions] = useState([]);
   const [dismissedRestarts, setDismissedRestarts] = useState({});
   const [notes, setNotes] = useState({});
@@ -2288,10 +2290,10 @@ export default function HabitTracker() {
 
   /* ── Habit toggle listener (dashboard HabitSection fires custom event) ── */
   useEffect(() => {
-    const userId = session?.user?.email;
     function handle(e) {
       const { habitId } = e.detail;
       const todayKey = getDayKey(date);
+      const userId = sessionRef.current?.user?.email;
       setCompletions((prev) => {
         const nowCompleted = !prev[todayKey]?.[habitId];
         const day = { ...(prev[todayKey] || {}), [habitId]: nowCompleted };
@@ -2301,14 +2303,14 @@ export default function HabitTracker() {
     }
     window.addEventListener("habitToggle", handle);
     return () => window.removeEventListener("habitToggle", handle);
-  }, [date, session]);
+  }, [date]);
 
   /* ── Actions ── */
   function addHabit({ name, timeSlot, category, cue, reward }) {
     const id = `h_${Date.now()}`;
     const habit = { id, name, timeSlot, category, cue, reward };
     setHabits((prev) => [...prev, habit]);
-    const userId = session?.user?.email;
+    const userId = sessionRef.current?.user?.email;
     if (userId) insertHabit(userId, habit);
   }
 
@@ -2323,7 +2325,7 @@ export default function HabitTracker() {
       });
       return next;
     });
-    const userId = session?.user?.email;
+    const userId = sessionRef.current?.user?.email;
     if (userId) deleteHabitDb(userId, id);
   }
 
@@ -2335,7 +2337,7 @@ export default function HabitTracker() {
           const slots = ["Morning", "Afternoon", "Evening"];
           const idx = slots.indexOf(h.timeSlot || "Morning");
           const next = { ...h, timeSlot: slots[(idx + 1) % slots.length] };
-          const userId = session?.user?.email;
+          const userId = sessionRef.current?.user?.email;
           if (userId) updateHabitDb(userId, habitId, { timeSlot: next.timeSlot });
           return next;
         })
@@ -2345,7 +2347,7 @@ export default function HabitTracker() {
   }
 
   function resetAll() {
-    const userId = session?.user?.email;
+    const userId = sessionRef.current?.user?.email;
     setHabits([]);
     setCompletions({});
     setPrefs({ name: "", theme: "dark" });
@@ -2412,7 +2414,7 @@ export default function HabitTracker() {
                   [habitId]: [...((prev[dateKey] || {})[habitId] || []), text],
                 },
               }));
-              const userId = session?.user?.email;
+              const userId = sessionRef.current?.user?.email;
               if (userId) insertNoteDb(userId, habitId, dateKey, text);
             }}
             date={date}
