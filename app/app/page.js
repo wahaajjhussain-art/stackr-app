@@ -2633,6 +2633,104 @@ function AnalyticsView({ habits, completions, date, notes }) {
    CALENDAR ERROR MODAL
    Shows a friendly message; real error goes to Vercel logs only.
    ════════════════════════════════════════════════════ */
+function CalendarSuccessModal({ onClose }) {
+  return (
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: "fixed", inset: 0,
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 400, animation: "fadeIn 0.3s ease",
+      }}
+    >
+      <div style={{
+        background: "var(--s-bg2)",
+        border: "1px solid rgba(90,158,114,0.30)",
+        borderRadius: "20px",
+        padding: "2.25rem 2.5rem 2rem",
+        width: "min(420px, 90vw)",
+        boxShadow: "0 28px 70px rgba(0,0,0,0.60)",
+        animation: "slideUp 0.28s cubic-bezier(0.22,1,0.36,1)",
+        textAlign: "center",
+        position: "relative",
+      }}>
+        {/* Close × */}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: "1rem", right: "1.1rem",
+            background: "none", border: "none",
+            color: MUTED, fontSize: "18px", lineHeight: 1,
+            cursor: "pointer", padding: "0.2rem 0.4rem",
+            borderRadius: "50%", transition: "color 0.15s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = PARCHMENT)}
+          onMouseLeave={(e) => (e.currentTarget.style.color = MUTED)}
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        {/* Green check icon */}
+        <div style={{
+          width: "52px", height: "52px", borderRadius: "50%",
+          background: "rgba(90,158,114,0.14)",
+          border: "1px solid rgba(90,158,114,0.35)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 1.4rem",
+        }}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M5 11.5L9 15.5L17 7" stroke={ACCENT3} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+
+        {/* Headline */}
+        <p style={{
+          fontFamily: SERIF,
+          fontStyle: "italic",
+          fontSize: "22px",
+          color: PARCHMENT,
+          lineHeight: 1.35,
+          marginBottom: "1.5rem",
+          letterSpacing: "0.01em",
+        }}>
+          Success! Now you're tracking it live with your Google Calendar
+        </p>
+
+        {/* CTA */}
+        <a
+          href="https://calendar.google.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: "8px",
+            padding: "0.7rem 1.8rem",
+            background: ACCENT2, border: "none",
+            borderRadius: "50px",
+            color: PARCHMENT,
+            fontFamily: SANS, fontSize: "13px", fontWeight: 500,
+            textDecoration: "none",
+            cursor: "pointer", transition: "background 0.2s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = ACCENT3)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = ACCENT2)}
+        >
+          {/* Google Calendar icon */}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="4" width="18" height="17" rx="2" stroke={PARCHMENT2} strokeWidth="1.5"/>
+            <path d="M3 9h18" stroke={PARCHMENT2} strokeWidth="1.5"/>
+            <path d="M8 2v4M16 2v4" stroke={PARCHMENT2} strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          View on Google Calendar
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function CalendarErrorModal({ onClose }) {
   return (
     <div
@@ -2716,6 +2814,7 @@ export default function HabitTracker() {
   const sessionRef = useRef(null); // always holds latest session for async db calls
   useEffect(() => { sessionRef.current = session; }, [session]);
   const [gcalErrorVisible, setGcalErrorVisible] = useState(false);
+  const [gcalSuccessVisible, setGcalSuccessVisible] = useState(false);
   const gcalErrorDetail = useRef("");
 
   function reportCalendarError(err, context) {
@@ -2921,6 +3020,7 @@ export default function HabitTracker() {
       const updated = { ...habit, gcalEventId: data.eventId, gcalSync: syncConfig };
       setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
       if (userId) updateHabitDb(userId, habitId, { gcalEventId: data.eventId, gcalSync: syncConfig });
+      setGcalSuccessVisible(true);
 
     } else if (action === "update" && habit.gcalEventId) {
       const res = await fetch("/api/calendar", {
@@ -3083,6 +3183,7 @@ export default function HabitTracker() {
 
   return (
     <>
+    {gcalSuccessVisible && <CalendarSuccessModal onClose={() => setGcalSuccessVisible(false)} />}
     {gcalErrorVisible && <CalendarErrorModal onClose={() => setGcalErrorVisible(false)} />}
     <div
       data-theme={isLight ? "light" : "dark"}
