@@ -1468,7 +1468,7 @@ function HabitSection({ slot, habits, todayCompletions, completions }) {
 
 /* ── All Habits View ── */
 /* ── Single expandable habit row ── */
-function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync }) {
+function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync, onError }) {
   const [open, setOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const todayKey = getDayKey(date);
@@ -1482,7 +1482,7 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
   const [syncDuration,  setSyncDuration]  = useState(h.gcalSync?.duration  || 30);
   const [syncFrequency, setSyncFrequency] = useState(h.gcalSync?.frequency || "DAILY");
   const [syncing, setSyncing] = useState(false);
-  const [syncError, setSyncError] = useState(null);
+  const [syncError, setSyncError] = useState(null); // kept for layout only, message never shown to user
   const synced = !!h.gcalEventId;
 
   function submitNote() {
@@ -1523,7 +1523,8 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
         setSyncEditing(false);
       } catch (err) {
         setSyncing(false);
-        setSyncError(err.message || "Something went wrong. Please try again.");
+        setSyncError(null); // don't show raw error to user
+        if (onError) onError(err, syncEditing ? "update event" : "create event");
       }
     } else {
       setSyncing(false);
@@ -1778,13 +1779,6 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
                       Cancel
                     </button>
                   </div>
-
-                  {/* Error message */}
-                  {syncError && (
-                    <div style={{ fontSize: "11px", color: "rgba(220,100,100,0.85)", marginTop: "4px", lineHeight: 1.45 }}>
-                      {syncError}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -1822,7 +1816,7 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
   );
 }
 
-function AllHabitsView({ habits, onDelete, onNavigate, notes, onAddNote, date, onCalendarSync }) {
+function AllHabitsView({ habits, onDelete, onNavigate, notes, onAddNote, date, onCalendarSync, onError }) {
   return (
     <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
       <div style={{ marginBottom: "2rem" }}>
@@ -1852,7 +1846,7 @@ function AllHabitsView({ habits, onDelete, onNavigate, notes, onAddNote, date, o
               onAddNote={onAddNote}
               date={date}
               onCalendarSync={onCalendarSync}
-            />
+              onError={onError}            />
           ))}
         </div>
       )}
@@ -2636,6 +2630,79 @@ function AnalyticsView({ habits, completions, date, notes }) {
 }
 
 /* ════════════════════════════════════════════════════
+   CALENDAR ERROR MODAL
+   Shows a friendly message; real error goes to Vercel logs only.
+   ════════════════════════════════════════════════════ */
+function CalendarErrorModal({ onClose }) {
+  return (
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: "fixed", inset: 0,
+        background: "var(--s-overlay)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 300, animation: "fadeIn 0.18s ease",
+      }}
+    >
+      <div style={{
+        background: "var(--s-bg2)",
+        border: `1px solid ${BORDER2}`,
+        borderRadius: "16px",
+        padding: "2rem 2.25rem",
+        width: "min(440px, 90vw)",
+        boxShadow: "0 24px 60px rgba(0,0,0,0.55)",
+        animation: "slideUp 0.22s ease",
+        textAlign: "center",
+      }}>
+        {/* Icon */}
+        <div style={{
+          width: "44px", height: "44px", borderRadius: "50%",
+          background: "rgba(232,184,75,0.12)",
+          border: "1px solid rgba(232,184,75,0.25)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 1.25rem",
+        }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 2L16.5 15H1.5L9 2Z" stroke={GOLD3} strokeWidth="1.3" strokeLinejoin="round"/>
+            <path d="M9 7V10" stroke={GOLD3} strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="9" cy="13" r="0.75" fill={GOLD3}/>
+          </svg>
+        </div>
+
+        <p style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "2.5px", textTransform: "uppercase", color: GOLD3, marginBottom: "0.6rem" }}>
+          Something went wrong
+        </p>
+        <p style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "20px", color: PARCHMENT, marginBottom: "0.9rem", lineHeight: 1.3 }}>
+          We're looking into it
+        </p>
+        <p style={{ fontSize: "13px", color: MUTED, lineHeight: 1.7, marginBottom: "1.75rem" }}>
+          We're really sorry — something isn't right with the Google Calendar connection.
+          Our team has been notified and will have this resolved within 24–48 business hours.
+          If it's urgent, please reach out to us directly.
+        </p>
+
+        <button
+          onClick={onClose}
+          style={{
+            padding: "0.65rem 2rem",
+            background: ACCENT, border: "none",
+            borderRadius: "50px", color: PARCHMENT,
+            fontFamily: SANS, fontSize: "13px", fontWeight: 500,
+            cursor: "pointer", transition: "background 0.2s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = ACCENT2)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = ACCENT)}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
    ROOT COMPONENT
    ════════════════════════════════════════════════════ */
 export default function HabitTracker() {
@@ -2648,6 +2715,15 @@ export default function HabitTracker() {
   const settingsRef = useRef(null);
   const sessionRef = useRef(null); // always holds latest session for async db calls
   useEffect(() => { sessionRef.current = session; }, [session]);
+  const [gcalErrorVisible, setGcalErrorVisible] = useState(false);
+  const gcalErrorDetail = useRef("");
+
+  function reportCalendarError(err, context) {
+    // Real error goes to Vercel logs (visible at vercel.com → project → Logs)
+    console.error(`[Stackr Calendar Error] ${context}:`, err?.message || err);
+    gcalErrorDetail.current = `${context}: ${err?.message || err}`;
+    setGcalErrorVisible(true);
+  }
   const [intentions, setIntentions] = useState([]);
   const [dismissedRestarts, setDismissedRestarts] = useState({});
   const [notes, setNotes] = useState({});
@@ -2942,6 +3018,7 @@ export default function HabitTracker() {
             }}
             date={date}
             onCalendarSync={handleCalendarSync}
+            onError={reportCalendarError}
           />
         );
       case "add-habit":
@@ -3006,6 +3083,7 @@ export default function HabitTracker() {
 
   return (
     <>
+    {gcalErrorVisible && <CalendarErrorModal onClose={() => setGcalErrorVisible(false)} />}
     <div
       data-theme={isLight ? "light" : "dark"}
       style={{
