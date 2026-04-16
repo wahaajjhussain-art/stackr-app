@@ -8,6 +8,7 @@ import {
   fetchPrefs, upsertPrefs,
   fetchIntentions, insertIntentionDb, updateIntentionDb, deleteIntentionDb,
   fetchNotes, insertNoteDb,
+  fetchStacks, insertStackDb, updateStackDb, deleteStackDb,
   resetAllDb,
 } from "@/lib/db";
 import ConsistencyScore from "./components/ConsistencyScore";
@@ -15,6 +16,7 @@ import SuggestionPanel from "./components/SuggestionPanel";
 import RestartPrompt from "./components/RestartPrompt";
 import IntentionBuilderView from "./components/IntentionBuilder";
 import ReviewView from "./components/ReviewView";
+import StackingView from "./components/StackingView";
 
 /* ═══════════════════════════════════════════════
    STACKR — Dashboard
@@ -2292,88 +2294,6 @@ function DailyView({ habits, completions, date, setCompletions }) {
   );
 }
 
-/* ── Stacking View ── */
-function StackingView({ habits }) {
-  return (
-    <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
-      <h2
-        style={{
-          fontFamily: SERIF,
-          fontStyle: "italic",
-          fontSize: "28px",
-          fontWeight: 400,
-          color: PARCHMENT,
-          marginBottom: "0.75rem",
-        }}
-      >
-        Habit Stacking
-      </h2>
-      <p style={{ fontSize: "13px", color: MUTED, maxWidth: "440px", lineHeight: 1.75, marginBottom: "2.5rem" }}>
-        Chain habits together. After you do one, you do the next. System-driven, not motivation-driven.
-      </p>
-      {habits.length < 2 ? (
-        <div style={{ ...card, maxWidth: "440px", padding: "2rem" }}>
-          <p style={{ fontSize: "13px", color: MUTED, lineHeight: 1.75 }}>
-            Add at least two habits to build a stack.
-          </p>
-        </div>
-      ) : (
-        <div style={{ maxWidth: "440px" }}>
-          {habits.map((h, i) => (
-            <div key={h.id} style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "4px" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div
-                  style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "50%",
-                    border: `1px solid ${BORDER2}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: MONO,
-                    fontSize: "10px",
-                    color: DIM,
-                    flexShrink: 0,
-                  }}
-                >
-                  {i + 1}
-                </div>
-                {i < habits.length - 1 && (
-                  <div
-                    style={{
-                      width: "1px",
-                      flex: 1,
-                      minHeight: "28px",
-                      background: BORDER,
-                      margin: "3px 0",
-                    }}
-                  />
-                )}
-              </div>
-              <div
-                style={{
-                  ...card,
-                  flex: 1,
-                  padding: "0.75rem 1rem",
-                  marginBottom: i < habits.length - 1 ? "4px" : 0,
-                }}
-              >
-                <div style={{ fontSize: "13px", color: PARCHMENT }}>{h.name}</div>
-                {h.cue && (
-                  <div style={{ fontSize: "11px", color: DIM, marginTop: "2px" }}>
-                    After: {h.cue}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ── Analytics View ── */
 function AnalyticsView({ habits, completions, date, notes }) {
   function getStreak(habitId) {
@@ -2827,6 +2747,7 @@ export default function HabitTracker() {
     setGcalErrorVisible(true);
   }
   const [intentions, setIntentions] = useState([]);
+  const [stacks, setStacks]         = useState([]);
   const [dismissedRestarts, setDismissedRestarts] = useState({});
   const [notes, setNotes] = useState({});
   const [date] = useState(new Date());
@@ -2872,7 +2793,8 @@ export default function HabitTracker() {
       fetchPrefs(userId),
       fetchIntentions(userId),
       fetchNotes(userId),
-    ]).then(([h, c, p, i, n]) => {
+      fetchStacks(userId),
+    ]).then(([h, c, p, i, n, st]) => {
       setHabits(h);
       setCompletions(c);
       if (p) {
@@ -2884,6 +2806,7 @@ export default function HabitTracker() {
       }
       setIntentions(i);
       setNotes(n);
+      setStacks(st);
     });
   }, [session]);
 
@@ -3194,7 +3117,14 @@ export default function HabitTracker() {
           />
         );
       case "stacking":
-        return <StackingView habits={habits} />;
+        return (
+          <StackingView
+            habits={habits}
+            stacks={stacks}
+            setStacks={setStacks}
+            userId={session?.user?.email}
+          />
+        );
       case "analytics":
         return (
           <AnalyticsView
