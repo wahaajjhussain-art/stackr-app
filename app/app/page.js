@@ -76,6 +76,20 @@ function getDaysInMonth(year, month) {
 
 const TIME_SLOTS = ["Morning", "Afternoon", "Evening"];
 
+/* ── Calendar helpers (module-level so modals can also use them) ── */
+function freqLabel(f) {
+  if (f === "WEEKDAYS") return "Weekdays";
+  if (f === "WEEKLY")   return "Weekly";
+  return "Daily";
+}
+function formatTime12(t) {
+  if (!t) return "";
+  const [hh, mm] = t.split(":").map(Number);
+  const ampm = hh >= 12 ? "PM" : "AM";
+  const h12  = hh % 12 || 12;
+  return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
+}
+
 const QUOTES = [
   "Every action you take is a vote for the type of person you wish to become.",
   "We become what we repeatedly do.",
@@ -808,9 +822,23 @@ function AddHabitModal({ onAdd, onClose }) {
   const [reward, setReward]     = useState("");
   const [error, setError]       = useState("");
 
+  /* ── Google Calendar sync ── */
+  const [syncEnabled, setSyncEnabled]     = useState(false);
+  const [syncTime, setSyncTime]           = useState("08:00");
+  const [syncDuration, setSyncDuration]   = useState(30);
+  const [syncFrequency, setSyncFrequency] = useState("DAILY");
+
+  /* Keep default time aligned with chosen time slot */
+  useEffect(() => {
+    if (syncEnabled) return; // don't override if user already customised
+    const defaults = { Morning: "08:00", Afternoon: "13:00", Evening: "19:00" };
+    setSyncTime(defaults[timeSlot] || "08:00");
+  }, [timeSlot]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function submit() {
     if (!name.trim()) { setError("Habit name is required."); return; }
-    onAdd({ name: name.trim(), timeSlot, category, cue: cue.trim(), reward: reward.trim() });
+    const gcalSync = syncEnabled ? { time: syncTime, duration: syncDuration, frequency: syncFrequency } : null;
+    onAdd({ name: name.trim(), timeSlot, category, cue: cue.trim(), reward: reward.trim(), gcalSync });
     onClose();
   }
 
@@ -850,6 +878,8 @@ function AddHabitModal({ onAdd, onClose }) {
           boxShadow: "0 24px 60px rgba(0,0,0,0.55)",
           animation: "slideUp 0.22s ease",
           position: "relative",
+          maxHeight: "90vh",
+          overflowY: "auto",
         }}
       >
         {/* Header */}
@@ -916,6 +946,125 @@ function AddHabitModal({ onAdd, onClose }) {
             <input style={inputBase} value={reward} onChange={(e) => setReward(e.target.value)} placeholder="I will treat myself to..." />
           </div>
 
+          {/* ── Google Calendar Sync ── */}
+          <div
+            style={{
+              borderRadius: "12px",
+              border: `1px solid ${syncEnabled ? "rgba(90,158,114,0.35)" : BORDER}`,
+              background: syncEnabled ? "rgba(30,77,48,0.1)" : "var(--s-faint)",
+              overflow: "hidden",
+              transition: "border-color 0.2s, background 0.2s",
+            }}
+          >
+            {/* Toggle header — clicking anywhere on it toggles */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setSyncEnabled((v) => !v)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSyncEnabled((v) => !v)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "0.85rem 1rem",
+                cursor: "pointer",
+                userSelect: "none",
+              }}
+            >
+              {/* Calendar icon */}
+              <div style={{
+                width: "30px", height: "30px", borderRadius: "8px",
+                background: syncEnabled ? "rgba(90,158,114,0.2)" : "var(--s-border)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0, transition: "background 0.2s",
+              }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: syncEnabled ? ACCENT3 : DIM, transition: "color 0.2s" }}>
+                  <rect x="1" y="2.5" width="12" height="10.5" rx="1.8" stroke="currentColor" strokeWidth="1.1"/>
+                  <path d="M1 6H13M4.5 1V4M9.5 1V4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                </svg>
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "13px", color: syncEnabled ? PARCHMENT : MUTED, transition: "color 0.2s", fontWeight: syncEnabled ? 500 : 400 }}>
+                  Sync with Google Calendar
+                </div>
+                <div style={{ fontSize: "11px", color: DIM, marginTop: "1px" }}>
+                  {syncEnabled ? `${formatTime12(syncTime)} · ${syncDuration} min · ${freqLabel(syncFrequency)}` : "Add a recurring event with a reminder"}
+                </div>
+              </div>
+
+              {/* Pill toggle */}
+              <div style={{
+                width: "34px", height: "20px", borderRadius: "10px", flexShrink: 0,
+                background: syncEnabled ? ACCENT2 : "var(--s-border)",
+                position: "relative", transition: "background 0.22s",
+              }}>
+                <span style={{
+                  position: "absolute", top: "4px",
+                  left: syncEnabled ? "16px" : "4px",
+                  width: "12px", height: "12px", borderRadius: "50%",
+                  background: "var(--s-text)",
+                  transition: "left 0.22s",
+                  display: "block",
+                }} />
+              </div>
+            </div>
+
+            {/* Expanded config */}
+            {syncEnabled && (
+              <div style={{
+                borderTop: `1px solid rgba(90,158,114,0.2)`,
+                padding: "0.9rem 1rem 1rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.75rem",
+              }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.65rem" }}>
+                  {/* Time */}
+                  <div>
+                    <label style={{ ...fieldLabel, color: "rgba(90,158,114,0.75)" }}>Time</label>
+                    <input
+                      type="time"
+                      value={syncTime}
+                      onChange={(e) => setSyncTime(e.target.value)}
+                      style={{ ...inputBase, fontSize: "12px" }}
+                    />
+                  </div>
+                  {/* Duration */}
+                  <div>
+                    <label style={{ ...fieldLabel, color: "rgba(90,158,114,0.75)" }}>Duration</label>
+                    <select
+                      value={syncDuration}
+                      onChange={(e) => setSyncDuration(Number(e.target.value))}
+                      style={{ ...inputBase, fontSize: "12px", cursor: "pointer" }}
+                    >
+                      <option value={15}>15 min</option>
+                      <option value={30}>30 min</option>
+                      <option value={45}>45 min</option>
+                      <option value={60}>1 hour</option>
+                    </select>
+                  </div>
+                  {/* Frequency */}
+                  <div>
+                    <label style={{ ...fieldLabel, color: "rgba(90,158,114,0.75)" }}>Repeat</label>
+                    <select
+                      value={syncFrequency}
+                      onChange={(e) => setSyncFrequency(e.target.value)}
+                      style={{ ...inputBase, fontSize: "12px", cursor: "pointer" }}
+                    >
+                      <option value="DAILY">Daily</option>
+                      <option value="WEEKDAYS">Weekdays</option>
+                      <option value="WEEKLY">Weekly</option>
+                    </select>
+                  </div>
+                </div>
+                <p style={{ fontSize: "10px", color: DIM, lineHeight: 1.5 }}>
+                  Google will ask for Calendar permission the first time. A recurring event with a 30-minute reminder will be added.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Submit */}
           <div style={{ paddingTop: "0.5rem", display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             <button
@@ -932,7 +1081,7 @@ function AddHabitModal({ onAdd, onClose }) {
               onMouseEnter={(e) => (e.currentTarget.style.background = ACCENT2)}
               onMouseLeave={(e) => (e.currentTarget.style.background = ACCENT)}
             >
-              Add Habit
+              {syncEnabled ? "Add & Sync" : "Add Habit"}
             </button>
           </div>
         </div>
@@ -1217,6 +1366,9 @@ function HabitSection({ slot, habits, todayCompletions, completions }) {
     window.dispatchEvent(event);
   }
 
+  const pending = habits.filter((h) => !localDone[h.id]);
+  const done    = habits.filter((h) =>  localDone[h.id]);
+
   return (
     <div style={{ marginBottom: "1.75rem" }}>
       <div
@@ -1231,12 +1383,53 @@ function HabitSection({ slot, habits, todayCompletions, completions }) {
       >
         {slot}
       </div>
+
+      {/* ── Pending ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-        {habits.map((h) => (
+        {pending.map((h) => (
           <HabitRow
             key={h.id}
             habit={h}
-            done={localDone[h.id] || false}
+            done={false}
+            streak={getStreak(h.id)}
+            onToggle={() => toggle(h.id)}
+          />
+        ))}
+      </div>
+
+      {/* ── Divider (only when both groups exist) ── */}
+      {pending.length > 0 && done.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0 5px" }}>
+          <div style={{ flex: 1, height: "1px", background: "rgba(90,158,114,0.18)" }} />
+          <span style={{
+            fontSize: "8.5px", fontWeight: 500, letterSpacing: "2px",
+            textTransform: "uppercase",
+            color: ACCENT3,
+          }}>
+            Done
+          </span>
+          <div style={{ flex: 1, height: "1px", background: "rgba(90,158,114,0.18)" }} />
+        </div>
+      )}
+
+      {/* ── Completed (no divider header needed when all are done) ── */}
+      {pending.length === 0 && done.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+          <svg width="11" height="9" viewBox="0 0 11 9" fill="none" style={{ flexShrink: 0 }}>
+            <path d="M1 4.5L4 7.5L10 1" stroke={ACCENT3} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "1.8px", textTransform: "uppercase", color: ACCENT3 }}>
+            All done
+          </span>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        {done.map((h) => (
+          <HabitRow
+            key={h.id}
+            habit={h}
+            done={true}
             streak={getStreak(h.id)}
             onToggle={() => toggle(h.id)}
           />
@@ -1272,18 +1465,6 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync })
   }
 
   /* ── Calendar sync helpers ── */
-  function freqLabel(f) {
-    if (f === "WEEKDAYS") return "Weekdays";
-    if (f === "WEEKLY")   return "Weekly";
-    return "Daily";
-  }
-  function formatTime12(t) {
-    if (!t) return "";
-    const [hh, mm] = t.split(":").map(Number);
-    const ampm = hh >= 12 ? "PM" : "AM";
-    const h12  = hh % 12 || 12;
-    return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
-  }
 
   function handleToggleSync() {
     if (synced) {
@@ -2495,12 +2676,16 @@ export default function HabitTracker() {
   }, [date]);
 
   /* ── Actions ── */
-  function addHabit({ name, timeSlot, category, cue, reward }) {
+  function addHabit({ name, timeSlot, category, cue, reward, gcalSync }) {
     const id = `h_${Date.now()}`;
     const habit = { id, name, timeSlot, category, cue, reward };
     setHabits((prev) => [...prev, habit]);
     const userId = sessionRef.current?.user?.email;
     if (userId) insertHabit(userId, habit);
+    // If user enabled Google Calendar sync in the modal, trigger it immediately.
+    // Pass habitOverride so handleCalendarSync doesn't need to look it up from state
+    // (state hasn't re-rendered yet at this point).
+    if (gcalSync) handleCalendarSync(id, "create", gcalSync, habit);
   }
 
   function deleteHabit(id) {
@@ -2572,9 +2757,9 @@ export default function HabitTracker() {
     client.requestAccessToken({ prompt: "" });
   }
 
-  async function handleCalendarSync(habitId, action, syncConfig) {
+  async function handleCalendarSync(habitId, action, syncConfig, habitOverride) {
     const userId = sessionRef.current?.user?.email;
-    const habit = habits.find((h) => h.id === habitId);
+    const habit = habitOverride || habits.find((h) => h.id === habitId);
     if (!habit) return;
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
