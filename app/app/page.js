@@ -236,6 +236,30 @@ function ProgressBar({ pct }) {
   );
 }
 
+/* ── Google Calendar sync badge ── */
+function GCalBadge() {
+  return (
+    <span title="Synced with Google Calendar" style={{ display: "inline-flex", alignItems: "center", flexShrink: 0 }}>
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* White backing */}
+        <circle cx="8" cy="8" r="7.5" fill="white" stroke="#DADCE0" strokeWidth="0.5"/>
+        {/* Blue: top-right quadrant */}
+        <path d="M8 8 L8 0.5 A7.5 7.5 0 0 1 15.5 8 Z" fill="#4285F4"/>
+        {/* Red: top-left quadrant */}
+        <path d="M8 8 L0.5 8 A7.5 7.5 0 0 1 8 0.5 Z" fill="#EA4335"/>
+        {/* Yellow: bottom-left quadrant */}
+        <path d="M8 8 L8 15.5 A7.5 7.5 0 0 1 0.5 8 Z" fill="#FBBC05"/>
+        {/* Green: bottom-right quadrant */}
+        <path d="M8 8 L15.5 8 A7.5 7.5 0 0 1 8 15.5 Z" fill="#34A853"/>
+        {/* White inner ring (donut) */}
+        <circle cx="8" cy="8" r="4.4" fill="white"/>
+        {/* G crossbar — blue horizontal bar on the right */}
+        <rect x="8" y="7" width="4.2" height="2" rx="0.3" fill="#4285F4"/>
+      </svg>
+    </span>
+  );
+}
+
 /* ════════════════════════════════════════════════════
    HABIT TOGGLE ROW
    ════════════════════════════════════════════════════ */
@@ -300,6 +324,9 @@ function HabitRow({ habit, done, streak, onToggle }) {
       >
         {habit.name}
       </span>
+
+      {/* Google Calendar badge */}
+      {habit.gcalEventId && <GCalBadge />}
 
       {/* Streak */}
       <span
@@ -2130,6 +2157,7 @@ function MonthlyView({ habits, completions, date }) {
                       </svg>
                     </div>
                     <span style={{ fontSize: "13px", color: PARCHMENT, flex: 1 }}>{h.name}</span>
+                    {h.gcalEventId && <GCalBadge />}
                     <span style={{ fontSize: "10px", color: ACCENT3, fontFamily: MONO }}>Done</span>
                   </div>
                 ))}
@@ -2138,6 +2166,7 @@ function MonthlyView({ habits, completions, date }) {
                   <div key={h.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0.55rem 0.75rem", background: FAINT, borderRadius: "7px", border: `1px solid ${BORDER}` }}>
                     <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: `1px solid ${BORDER2}`, flexShrink: 0 }} />
                     <span style={{ fontSize: "13px", color: MUTED, flex: 1 }}>{h.name}</span>
+                    {h.gcalEventId && <GCalBadge />}
                     <span style={{ fontSize: "10px", color: DIM, fontFamily: MONO }}>Pending</span>
                   </div>
                 ))}
