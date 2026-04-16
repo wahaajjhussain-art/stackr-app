@@ -183,15 +183,20 @@ function Sidebar({ active, setActive }) {
       {/* ── Desktop sidebar ── */}
       <aside className="stackr-sidebar" style={{ width: "210px", flexShrink: 0, borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", padding: "2rem 0", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         <div style={{ padding: "0 1.5rem 2rem", borderBottom: `1px solid ${BORDER}`, marginBottom: "1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-            {/* Stackr logo mark */}
-            <svg width="26" height="26" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, borderRadius: "7px" }}>
-              <rect width="64" height="64" rx="14" fill="#16140F"/>
-              <rect x="10" y="16" width="44" height="9" rx="4.5" fill="#5A9E72"/>
-              <rect x="10" y="28" width="32" height="9" rx="4.5" fill="#2F6B43"/>
-              <rect x="10" y="40" width="20" height="9" rx="4.5" fill="#E8B84B" fillOpacity="0.85"/>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <svg viewBox="0 0 37 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "32px", height: "auto", flexShrink: 0, overflow: "visible" }}>
+              <defs>
+                <linearGradient id="sBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#1E4D30"/>
+                  <stop offset="100%" stopColor="#5A9E72"/>
+                </linearGradient>
+              </defs>
+              <rect x="6"  y="0"    width="26" height="3.5" rx="0.8" fill="url(#sBarGrad)" opacity="0.70"/>
+              <rect x="2"  y="5.5"  width="26" height="3.5" rx="0.8" fill="url(#sBarGrad)" opacity="0.82"/>
+              <rect x="9"  y="11"   width="26" height="3.5" rx="0.8" fill="url(#sBarGrad)" opacity="0.92"/>
+              <rect x="4"  y="16.5" width="26" height="3.5" rx="0.8" fill="url(#sBarGrad)" opacity="1.00"/>
             </svg>
-            <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "20px", fontWeight: 400, color: PARCHMENT, letterSpacing: "0.3px" }}>Stackr</span>
+            <span style={{ fontFamily: SANS, fontSize: "12px", fontWeight: 500, letterSpacing: "0.18em", textTransform: "uppercase", color: PARCHMENT }}>Stackr</span>
           </div>
         </div>
         <NavItems />
@@ -199,14 +204,20 @@ function Sidebar({ active, setActive }) {
 
       {/* ── Mobile top bar ── */}
       <div className="stackr-topbar" style={{ display: "none", position: "fixed", top: 0, left: 0, right: 0, height: "52px", background: INK, borderBottom: `1px solid ${BORDER}`, alignItems: "center", justifyContent: "space-between", padding: "0 1rem", zIndex: 300 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, borderRadius: "6px" }}>
-            <rect width="64" height="64" rx="14" fill="#16140F"/>
-            <rect x="10" y="16" width="44" height="9" rx="4.5" fill="#5A9E72"/>
-            <rect x="10" y="28" width="32" height="9" rx="4.5" fill="#2F6B43"/>
-            <rect x="10" y="40" width="20" height="9" rx="4.5" fill="#E8B84B" fillOpacity="0.85"/>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <svg viewBox="0 0 37 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "28px", height: "auto", flexShrink: 0, overflow: "visible" }}>
+            <defs>
+              <linearGradient id="sBarGradM" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#1E4D30"/>
+                <stop offset="100%" stopColor="#5A9E72"/>
+              </linearGradient>
+            </defs>
+            <rect x="6"  y="0"    width="26" height="3.5" rx="0.8" fill="url(#sBarGradM)" opacity="0.70"/>
+            <rect x="2"  y="5.5"  width="26" height="3.5" rx="0.8" fill="url(#sBarGradM)" opacity="0.82"/>
+            <rect x="9"  y="11"   width="26" height="3.5" rx="0.8" fill="url(#sBarGradM)" opacity="0.92"/>
+            <rect x="4"  y="16.5" width="26" height="3.5" rx="0.8" fill="url(#sBarGradM)" opacity="1.00"/>
           </svg>
-          <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "19px", fontWeight: 400, color: PARCHMENT }}>Stackr</span>
+          <span style={{ fontFamily: SANS, fontSize: "12px", fontWeight: 500, letterSpacing: "0.18em", textTransform: "uppercase", color: PARCHMENT }}>Stackr</span>
         </div>
         <button onClick={() => setDrawerOpen(true)} style={{ background: "none", border: "none", color: PARCHMENT, cursor: "pointer", padding: "6px", display: "flex", alignItems: "center" }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -219,14 +230,20 @@ function Sidebar({ active, setActive }) {
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} />
           <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "240px", background: INK2, borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", padding: "1.5rem 0", overflowY: "auto", animation: "slideInLeft 0.22s ease" }}>
             <div style={{ padding: "0 1.5rem 1.5rem", borderBottom: `1px solid ${BORDER}`, marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, borderRadius: "6px" }}>
-                  <rect width="64" height="64" rx="14" fill="#16140F"/>
-                  <rect x="10" y="16" width="44" height="9" rx="4.5" fill="#5A9E72"/>
-                  <rect x="10" y="28" width="32" height="9" rx="4.5" fill="#2F6B43"/>
-                  <rect x="10" y="40" width="20" height="9" rx="4.5" fill="#E8B84B" fillOpacity="0.85"/>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <svg viewBox="0 0 37 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "28px", height: "auto", flexShrink: 0, overflow: "visible" }}>
+                  <defs>
+                    <linearGradient id="sBarGradD" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#1E4D30"/>
+                      <stop offset="100%" stopColor="#5A9E72"/>
+                    </linearGradient>
+                  </defs>
+                  <rect x="6"  y="0"    width="26" height="3.5" rx="0.8" fill="url(#sBarGradD)" opacity="0.70"/>
+                  <rect x="2"  y="5.5"  width="26" height="3.5" rx="0.8" fill="url(#sBarGradD)" opacity="0.82"/>
+                  <rect x="9"  y="11"   width="26" height="3.5" rx="0.8" fill="url(#sBarGradD)" opacity="0.92"/>
+                  <rect x="4"  y="16.5" width="26" height="3.5" rx="0.8" fill="url(#sBarGradD)" opacity="1.00"/>
                 </svg>
-                <span style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "19px", fontWeight: 400, color: PARCHMENT }}>Stackr</span>
+                <span style={{ fontFamily: SANS, fontSize: "12px", fontWeight: 500, letterSpacing: "0.18em", textTransform: "uppercase", color: PARCHMENT }}>Stackr</span>
               </div>
               <button onClick={() => setDrawerOpen(false)} style={{ background: "none", border: "none", color: DIM, cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>✕</button>
             </div>
