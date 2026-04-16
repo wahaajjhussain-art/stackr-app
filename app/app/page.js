@@ -2640,6 +2640,20 @@ export default function HabitTracker() {
   const [themeAnim, setThemeAnim] = useState(null);
   const [gcalToken, setGcalToken] = useState(null);
   const [gcalTokenExpiry, setGcalTokenExpiry] = useState(0);
+  const [gisReady, setGisReady] = useState(false);
+
+  /* ── Load Google Identity Services script via useEffect (React ignores <script> in JSX) ── */
+  useEffect(() => {
+    if (document.getElementById("gsi-script")) { setGisReady(true); return; }
+    const script = document.createElement("script");
+    script.id  = "gsi-script";
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setGisReady(true);
+    script.onerror = () => console.error("Failed to load GIS script");
+    document.head.appendChild(script);
+  }, []);
 
   /* ── Close settings dropdown on outside click ── */
   useEffect(() => {
@@ -2759,8 +2773,9 @@ export default function HabitTracker() {
 
   /* ── Google Calendar integration ── */
   function requestCalendarAccess(callback) {
-    if (!window.google?.accounts?.oauth2) {
-      console.error("GIS library not loaded yet");
+    if (!gisReady || !window.google?.accounts?.oauth2) {
+      console.error("GIS not ready yet — gisReady:", gisReady, "window.google:", !!window.google);
+      alert("Google sign-in library is still loading. Please wait a moment and try again.");
       return;
     }
     const isExpired = !gcalToken || Date.now() >= gcalTokenExpiry - 60_000;
@@ -2974,9 +2989,6 @@ export default function HabitTracker() {
 
   return (
     <>
-    {/* Google Identity Services — loaded once, used only when user enables calendar sync */}
-    {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <div
       data-theme={isLight ? "light" : "dark"}
       style={{
