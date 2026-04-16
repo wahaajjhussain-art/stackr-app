@@ -1248,17 +1248,69 @@ function HabitSection({ slot, habits, todayCompletions, completions }) {
 
 /* ── All Habits View ── */
 /* ── Single expandable habit row ── */
-function HabitDetailRow({ h, onDelete, notes, onAddNote, date }) {
+function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync }) {
   const [open, setOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const todayKey = getDayKey(date);
   const todayNotes = ((notes[todayKey] || {})[h.id]) || [];
+
+  /* ── Calendar sync state ── */
+  const defaultTime = h.timeSlot === "Afternoon" ? "13:00" : h.timeSlot === "Evening" ? "19:00" : "08:00";
+  const [showSyncConfig, setShowSyncConfig] = useState(false);
+  const [syncEditing, setSyncEditing] = useState(false);
+  const [syncTime,      setSyncTime]      = useState(h.gcalSync?.time      || defaultTime);
+  const [syncDuration,  setSyncDuration]  = useState(h.gcalSync?.duration  || 30);
+  const [syncFrequency, setSyncFrequency] = useState(h.gcalSync?.frequency || "DAILY");
+  const [syncing, setSyncing] = useState(false);
+  const synced = !!h.gcalEventId;
 
   function submitNote() {
     const t = noteText.trim();
     if (!t) return;
     onAddNote(h.id, todayKey, t);
     setNoteText("");
+  }
+
+  /* ── Calendar sync helpers ── */
+  function freqLabel(f) {
+    if (f === "WEEKDAYS") return "Weekdays";
+    if (f === "WEEKLY")   return "Weekly";
+    return "Daily";
+  }
+  function formatTime12(t) {
+    if (!t) return "";
+    const [hh, mm] = t.split(":").map(Number);
+    const ampm = hh >= 12 ? "PM" : "AM";
+    const h12  = hh % 12 || 12;
+    return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
+  }
+
+  function handleToggleSync() {
+    if (synced) {
+      // Turn off → delete the calendar event
+      if (onCalendarSync) onCalendarSync(h.id, "delete", null);
+      setShowSyncConfig(false);
+      setSyncEditing(false);
+    } else {
+      // Turn on → open config panel with defaults
+      setSyncTime(h.gcalSync?.time || defaultTime);
+      setSyncDuration(h.gcalSync?.duration || 30);
+      setSyncFrequency(h.gcalSync?.frequency || "DAILY");
+      setShowSyncConfig(true);
+      setSyncEditing(false);
+    }
+  }
+
+  async function submitSync() {
+    if (!syncTime || syncing) return;
+    setSyncing(true);
+    const config = { time: syncTime, duration: syncDuration, frequency: syncFrequency };
+    if (onCalendarSync) {
+      await onCalendarSync(h.id, syncEditing ? "update" : "create", config);
+    }
+    setSyncing(false);
+    setShowSyncConfig(false);
+    setSyncEditing(false);
   }
 
   return (
@@ -1406,13 +1458,147 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date }) {
               ))}
             </div>
           )}
+
+          {/* ── Google Calendar sync ── */}
+          {onCalendarSync && (
+            <div style={{ marginTop: "1rem", paddingTop: "0.9rem", borderTop: `1px solid ${BORDER}` }}>
+              {/* Header row: label + toggle */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ color: DIM, flexShrink: 0 }}>
+                    <rect x="1" y="2" width="11" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.1"/>
+                    <path d="M1 5.5H12M4 1V3.5M9 1V3.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                  </svg>
+                  <span style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "1.8px", textTransform: "uppercase", color: DIM }}>
+                    Google Calendar
+                  </span>
+                </div>
+                {/* Pill toggle */}
+                <button
+                  onClick={handleToggleSync}
+                  style={{
+                    width: "32px", height: "18px", borderRadius: "9px", flexShrink: 0,
+                    background: synced ? ACCENT2 : "var(--s-border)",
+                    border: "none", cursor: "pointer", position: "relative",
+                    transition: "background 0.2s",
+                  }}
+                  aria-label={synced ? "Disable Google Calendar sync" : "Enable Google Calendar sync"}
+                >
+                  <span style={{
+                    position: "absolute", top: "3px",
+                    left: synced ? "16px" : "3px",
+                    width: "12px", height: "12px", borderRadius: "50%",
+                    background: "var(--s-text)",
+                    transition: "left 0.2s",
+                    display: "block",
+                  }} />
+                </button>
+              </div>
+
+              {/* Config panel */}
+              {showSyncConfig && (
+                <div style={{ marginTop: "0.8rem", display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+                  <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+                    {/* Time */}
+                    <div style={{ flex: "1 1 90px", minWidth: "90px" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "1.8px", textTransform: "uppercase", color: DIM, marginBottom: "4px" }}>Time</div>
+                      <input
+                        type="time"
+                        value={syncTime}
+                        onChange={(e) => setSyncTime(e.target.value)}
+                        style={{ ...inputBase, fontSize: "12px", width: "100%", boxSizing: "border-box" }}
+                      />
+                    </div>
+                    {/* Duration */}
+                    <div style={{ flex: "1 1 90px", minWidth: "90px" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "1.8px", textTransform: "uppercase", color: DIM, marginBottom: "4px" }}>Duration</div>
+                      <select
+                        value={syncDuration}
+                        onChange={(e) => setSyncDuration(Number(e.target.value))}
+                        style={{ ...inputBase, fontSize: "12px", cursor: "pointer", width: "100%", boxSizing: "border-box" }}
+                      >
+                        <option value={15}>15 min</option>
+                        <option value={30}>30 min</option>
+                        <option value={45}>45 min</option>
+                        <option value={60}>1 hour</option>
+                      </select>
+                    </div>
+                    {/* Frequency */}
+                    <div style={{ flex: "1 1 90px", minWidth: "90px" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "1.8px", textTransform: "uppercase", color: DIM, marginBottom: "4px" }}>Repeat</div>
+                      <select
+                        value={syncFrequency}
+                        onChange={(e) => setSyncFrequency(e.target.value)}
+                        style={{ ...inputBase, fontSize: "12px", cursor: "pointer", width: "100%", boxSizing: "border-box" }}
+                      >
+                        <option value="DAILY">Daily</option>
+                        <option value="WEEKDAYS">Weekdays</option>
+                        <option value="WEEKLY">Weekly</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button
+                      onClick={submitSync}
+                      disabled={syncing || !syncTime}
+                      style={{
+                        padding: "0.4rem 1rem",
+                        background: ACCENT, border: `1px solid ${ACCENT2}`,
+                        borderRadius: "7px", color: PARCHMENT,
+                        fontFamily: SANS, fontSize: "11px",
+                        cursor: syncing ? "wait" : "pointer",
+                        opacity: syncing ? 0.6 : 1,
+                        transition: "opacity 0.15s",
+                      }}
+                    >
+                      {syncing ? "Saving…" : syncEditing ? "Update Event" : "Add to Calendar"}
+                    </button>
+                    <button
+                      onClick={() => { setShowSyncConfig(false); setSyncEditing(false); }}
+                      style={{ background: "none", border: "none", color: DIM, fontFamily: SANS, fontSize: "11px", cursor: "pointer" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Synced summary */}
+              {synced && !showSyncConfig && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "7px" }}>
+                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none" style={{ color: ACCENT3, flexShrink: 0 }}>
+                    <path d="M1 4.5L4 7.5L10 1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span style={{ fontSize: "11px", color: MUTED }}>
+                    {freqLabel(h.gcalSync?.frequency)} · {formatTime12(h.gcalSync?.time)} · {h.gcalSync?.duration} min
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSyncTime(h.gcalSync?.time || defaultTime);
+                      setSyncDuration(h.gcalSync?.duration || 30);
+                      setSyncFrequency(h.gcalSync?.frequency || "DAILY");
+                      setShowSyncConfig(true);
+                      setSyncEditing(true);
+                    }}
+                    style={{ background: "none", border: "none", color: DIM, cursor: "pointer", padding: "0 2px", display: "flex", alignItems: "center" }}
+                    aria-label="Edit calendar sync"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      <path d="M7.5 1.5L9.5 3.5L3.5 9.5H1.5V7.5L7.5 1.5Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function AllHabitsView({ habits, onDelete, onNavigate, notes, onAddNote, date }) {
+function AllHabitsView({ habits, onDelete, onNavigate, notes, onAddNote, date, onCalendarSync }) {
   return (
     <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
       <div style={{ marginBottom: "2rem" }}>
@@ -1441,6 +1627,7 @@ function AllHabitsView({ habits, onDelete, onNavigate, notes, onAddNote, date })
               notes={notes || {}}
               onAddNote={onAddNote}
               date={date}
+              onCalendarSync={onCalendarSync}
             />
           ))}
         </div>
@@ -2241,6 +2428,8 @@ export default function HabitTracker() {
   const [date] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const [themeAnim, setThemeAnim] = useState(null);
+  const [gcalToken, setGcalToken] = useState(null);
+  const [gcalTokenExpiry, setGcalTokenExpiry] = useState(0);
 
   /* ── Close settings dropdown on outside click ── */
   useEffect(() => {
@@ -2354,6 +2543,94 @@ export default function HabitTracker() {
     if (userId) resetAllDb(userId);
   }
 
+  /* ── Google Calendar integration ── */
+  function requestCalendarAccess(callback) {
+    if (!window.google?.accounts?.oauth2) {
+      console.error("GIS library not loaded yet");
+      return;
+    }
+    const isExpired = !gcalToken || Date.now() >= gcalTokenExpiry - 60_000;
+    if (!isExpired) {
+      callback(gcalToken);
+      return;
+    }
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      scope: "https://www.googleapis.com/auth/calendar.events",
+      callback: (resp) => {
+        if (resp.error) {
+          console.error("Calendar OAuth error:", resp.error);
+          return;
+        }
+        const tok = resp.access_token;
+        const exp = Date.now() + (resp.expires_in || 3600) * 1000;
+        setGcalToken(tok);
+        setGcalTokenExpiry(exp);
+        callback(tok);
+      },
+    });
+    client.requestAccessToken({ prompt: "" });
+  }
+
+  async function handleCalendarSync(habitId, action, syncConfig) {
+    const userId = sessionRef.current?.user?.email;
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    requestCalendarAccess(async (token) => {
+      if (action === "create") {
+        const res = await fetch("/api/calendar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "create",
+            token,
+            habit: { ...habit, gcalSync: syncConfig },
+            timezone,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { console.error("Calendar create failed:", data.error); return; }
+        const updated = { ...habit, gcalEventId: data.eventId, gcalSync: syncConfig };
+        setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
+        if (userId) updateHabitDb(userId, habitId, { gcalEventId: data.eventId, gcalSync: syncConfig });
+
+      } else if (action === "update" && habit.gcalEventId) {
+        const res = await fetch("/api/calendar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "update",
+            token,
+            eventId: habit.gcalEventId,
+            habit: { ...habit, gcalSync: syncConfig },
+            timezone,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { console.error("Calendar update failed:", data.error); return; }
+        const updated = { ...habit, gcalSync: syncConfig };
+        setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
+        if (userId) updateHabitDb(userId, habitId, { gcalSync: syncConfig });
+
+      } else if (action === "delete" && habit.gcalEventId) {
+        const res = await fetch("/api/calendar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "delete", token, eventId: habit.gcalEventId }),
+        });
+        if (res.ok) {
+          const updated = { ...habit, gcalEventId: null, gcalSync: null };
+          setHabits((prev) => prev.map((h) => (h.id === habitId ? updated : h)));
+          if (userId) updateHabitDb(userId, habitId, { gcalEventId: null, gcalSync: null });
+        } else {
+          console.error("Calendar delete failed");
+        }
+      }
+    });
+  }
+
   function handleThemeChange(next) {
     setPrefs((p) => ({ ...p, theme: next }));
     setThemeAnim(next === "light" ? "to-light" : "to-dark");
@@ -2418,6 +2695,7 @@ export default function HabitTracker() {
               if (userId) insertNoteDb(userId, habitId, dateKey, text);
             }}
             date={date}
+            onCalendarSync={handleCalendarSync}
           />
         );
       case "add-habit":
@@ -2481,6 +2759,10 @@ export default function HabitTracker() {
   const isLight = prefs.theme === "light";
 
   return (
+    <>
+    {/* Google Identity Services — loaded once, used only when user enables calendar sync */}
+    {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <div
       data-theme={isLight ? "light" : "dark"}
       style={{
@@ -2678,5 +2960,6 @@ export default function HabitTracker() {
         />
       </div>
     </div>
+    </>
   );
 }

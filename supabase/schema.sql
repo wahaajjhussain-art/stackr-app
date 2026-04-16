@@ -18,6 +18,13 @@ alter table habits enable row level security;
 create policy "habits_open" on habits for all using (true) with check (true);
 create index if not exists habits_user_idx on habits (user_id);
 
+-- Google Calendar sync (added after initial deploy)
+-- Run this migration separately if the table already exists:
+-- ALTER TABLE habits ADD COLUMN IF NOT EXISTS gcal_event_id TEXT;
+-- ALTER TABLE habits ADD COLUMN IF NOT EXISTS gcal_sync JSONB;
+alter table habits add column if not exists gcal_event_id text;
+alter table habits add column if not exists gcal_sync jsonb;
+
 -- 2. COMPLETIONS
 create table if not exists completions (
   user_id     text  not null,
