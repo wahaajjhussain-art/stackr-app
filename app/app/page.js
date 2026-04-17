@@ -2901,6 +2901,121 @@ function CalendarErrorModal({ onClose }) {
 }
 
 /* ════════════════════════════════════════════════════
+   DASHBOARD SKELETON — shown while data loads
+   ════════════════════════════════════════════════════ */
+function DashboardSkeleton() {
+  const shimmer = {
+    background: `linear-gradient(90deg, var(--s-faint) 25%, rgba(246,241,232,0.08) 50%, var(--s-faint) 75%)`,
+    backgroundSize: "200% 100%",
+    animation: "shimmer 1.5s ease infinite",
+    borderRadius: "6px",
+  };
+
+  const Bone = ({ w, h, mb, style: extra }) => (
+    <div style={{ width: w || "100%", height: h || "14px", marginBottom: mb || 0, ...shimmer, ...extra }} />
+  );
+
+  return (
+    <div data-theme="dark" style={{ minHeight: "100vh", background: "var(--s-bg, #16140F)", fontFamily: SANS, display: "flex" }}>
+      <style>{`
+        [data-theme="dark"] {
+          --s-bg: #16140F; --s-bg2: #1C1A14; --s-text: #F6F1E8;
+          --s-border: rgba(246,241,232,0.08); --s-faint: rgba(246,241,232,0.07);
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes fadeInSkeleton { from { opacity: 0; } to { opacity: 1; } }
+        .skel-sidebar { width: 210px; flex-shrink: 0; border-right: 1px solid var(--s-border); padding: 2rem 1.5rem; }
+        .skel-main { flex: 1; padding: 2.5rem 2.5rem 2.5rem 2rem; animation: fadeInSkeleton 0.3s ease; }
+        @media (max-width: 680px) {
+          .skel-sidebar { display: none !important; }
+          .skel-main { padding: 68px 1rem 80px !important; }
+          .skel-topbar { display: flex !important; }
+          .skel-bottom-nav { display: flex !important; }
+        }
+      `}</style>
+
+      {/* Skeleton sidebar (desktop) */}
+      <div className="skel-sidebar" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        <Bone w="90px" h="20px" mb="2rem" />
+        <Bone w="60px" h="8px" />
+        <Bone w="120px" h="12px" />
+        <Bone w="100px" h="12px" />
+        <Bone w="110px" h="12px" />
+        <div style={{ height: "1rem" }} />
+        <Bone w="60px" h="8px" />
+        <Bone w="120px" h="12px" />
+        <Bone w="90px" h="12px" />
+      </div>
+
+      {/* Skeleton mobile topbar */}
+      <div className="skel-topbar" style={{
+        display: "none", position: "fixed", top: 0, left: 0, right: 0, height: "52px",
+        background: "var(--s-bg)", borderBottom: "1px solid var(--s-border)",
+        alignItems: "center", justifyContent: "space-between", padding: "0 1rem", zIndex: 300,
+      }}>
+        <Bone w="100px" h="18px" />
+        <Bone w="20px" h="20px" style={{ borderRadius: "4px" }} />
+      </div>
+
+      {/* Skeleton main content */}
+      <div className="skel-main">
+        {/* Date line */}
+        <Bone w="140px" h="10px" mb="0.75rem" />
+        {/* Greeting */}
+        <Bone w="min(360px, 80%)" h="28px" mb="0.5rem" />
+        <Bone w="min(220px, 55%)" h="28px" mb="1.5rem" />
+        {/* Progress bar area */}
+        <Bone w="120px" h="10px" mb="0.6rem" />
+        <Bone w="100%" h="3px" mb="2rem" />
+        {/* Consistency card */}
+        <div style={{ background: "var(--s-bg2)", border: "1px solid var(--s-border)", borderRadius: "12px", padding: "1.25rem", marginBottom: "2rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <Bone w="50px" h="32px" />
+            <div style={{ flex: 1 }}>
+              <Bone w="130px" h="10px" mb="8px" />
+              <Bone w="100%" h="5px" />
+            </div>
+          </div>
+        </div>
+        {/* Habit sections */}
+        {["Morning", "Afternoon", "Evening"].map((slot) => (
+          <div key={slot} style={{ marginBottom: "1.75rem" }}>
+            <Bone w="80px" h="9px" mb="0.75rem" />
+            {[1, 2].map((j) => (
+              <div key={j} style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                padding: "0.85rem 1rem", marginBottom: "8px",
+                background: "var(--s-bg2)", border: "1px solid var(--s-border)", borderRadius: "10px",
+              }}>
+                <Bone w="22px" h="22px" style={{ borderRadius: "50%", flexShrink: 0 }} />
+                <Bone w="min(140px, 50%)" h="13px" />
+                <div style={{ marginLeft: "auto" }}>
+                  <Bone w="20px" h="10px" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Skeleton mobile bottom nav */}
+      <div className="skel-bottom-nav" style={{
+        display: "none", position: "fixed", bottom: 0, left: 0, right: 0, height: "60px",
+        background: "var(--s-bg2)", borderTop: "1px solid var(--s-border)",
+        alignItems: "center", justifyContent: "space-around", padding: "0 1rem", zIndex: 299,
+      }}>
+        {[1,2,3,4,5].map((i) => (
+          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+            <Bone w="20px" h="20px" style={{ borderRadius: "4px" }} />
+            <Bone w="28px" h="7px" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
    ROOT COMPONENT
    ════════════════════════════════════════════════════ */
 export default function HabitTracker() {
@@ -2940,6 +3055,7 @@ export default function HabitTracker() {
   const [notes, setNotes] = useState({});
   const [date, setDate] = useState(new Date());
   const [mounted, setMounted] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
   const [themeAnim, setThemeAnim] = useState(null);
   const [gcalToken, setGcalToken] = useState(null);
   const [gcalTokenExpiry, setGcalTokenExpiry] = useState(0);
@@ -3018,6 +3134,7 @@ export default function HabitTracker() {
       setNotes(n);
       setStacks(st);
       setLoadError(false);
+      setDataReady(true);
     }).catch((err) => {
       console.error("Failed to load user data:", err);
       setLoadError(true);
@@ -3425,7 +3542,9 @@ export default function HabitTracker() {
     }
   }
 
-  if (!mounted) return null;
+  if (!mounted || !dataReady) {
+    return <DashboardSkeleton />;
+  }
 
   if (loadError) {
     return (
