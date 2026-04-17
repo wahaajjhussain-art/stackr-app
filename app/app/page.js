@@ -648,6 +648,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
       onClick={(e) => e.stopPropagation()}
     >
       <div
+        className="stackr-settings-panel"
         style={{
           background: INK2,
           border: `1px solid ${BORDER2}`,
@@ -926,6 +927,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
               fontSize: "13px",
               cursor: "pointer",
               transition: "all 0.15s",
+              minWidth: 0,
             }}
           >
             Close
@@ -943,6 +945,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
               fontSize: "13px",
               cursor: "pointer",
               transition: "all 0.15s",
+              minWidth: 0,
             }}
           >
             Clear all data
@@ -955,6 +958,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           style={{
             marginTop: "0.75rem",
             width: "100%",
+            boxSizing: "border-box",
             padding: "0.65rem",
             background: "transparent",
             border: `1px solid ${BORDER}`,
@@ -967,6 +971,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
+            whiteSpace: "nowrap",
             transition: "color 0.15s, border-color 0.15s",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = PARCHMENT; e.currentTarget.style.borderColor = BORDER2; }}
@@ -3655,6 +3660,14 @@ export default function HabitTracker() {
           .stackr-gear button { width: 40px !important; height: 40px !important; }
           .stackr-dashboard-grid { grid-template-columns: 1fr !important; }
           .stackr-settings-anchor { right: 10px !important; bottom: 72px !important; }
+          .stackr-settings-anchor {
+            right: 0 !important; left: 0 !important; bottom: 60px !important;
+            padding: 0 8px;
+          }
+          .stackr-settings-panel {
+            width: 100% !important; max-width: 100% !important;
+            border-radius: 16px 16px 0 0 !important;
+          }
         }
       `}</style>
 
