@@ -2878,6 +2878,17 @@ export default function HabitTracker() {
   const [gcalErrorVisible, setGcalErrorVisible] = useState(false);
   const [gcalSuccessVisible, setGcalSuccessVisible] = useState(false);
   const gcalErrorDetail = useRef("");
+  const [toastMessage, setToastMessage] = useState(null);
+  const toastTimer = useRef(null);
+
+  function showToast(msg) {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMessage(null);
+    requestAnimationFrame(() => {
+      setToastMessage(msg);
+      toastTimer.current = setTimeout(() => setToastMessage(null), 4000);
+    });
+  }
 
   function reportCalendarError(err, context) {
     // Real error goes to Vercel logs (visible at vercel.com → project → Logs)
@@ -3052,6 +3063,9 @@ export default function HabitTracker() {
     // Pass habitOverride so handleCalendarSync doesn't need to look it up from state
     // (state hasn't re-rendered yet at this point).
     if (gcalSync) handleCalendarSync(id, "create", gcalSync, habit);
+    if (reminderPrefs.reminders_enabled) {
+      showToast("You'll receive daily reminders for your habits on the email registered with Stackr.");
+    }
   }
 
   function deleteHabit(id) {
@@ -3470,6 +3484,8 @@ export default function HabitTracker() {
           100% { transform:translate(0,0) scale(3.8); opacity:0; }
         }
         @keyframes slideInLeft { from{transform:translateX(-100%)} to{transform:translateX(0)} }
+        @keyframes toastSlideIn { from{opacity:0;transform:translateX(40px) scale(0.95)} to{opacity:1;transform:translateX(0) scale(1)} }
+        @keyframes toastFadeOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(40px)} }
         .habit-row { transition: all 0.18s; }
         @media (max-width: 680px) {
           .stackr-sidebar { display: none !important; }
@@ -3549,6 +3565,37 @@ export default function HabitTracker() {
           );
         })}
       </div>
+
+      {/* Toast notification — top-right */}
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          zIndex: 999,
+          maxWidth: "360px",
+          padding: "14px 20px",
+          borderRadius: "14px",
+          background: "linear-gradient(135deg, rgba(30,77,48,0.92), rgba(47,107,67,0.88))",
+          backdropFilter: "blur(12px)",
+          border: `1px solid rgba(90,158,114,0.35)`,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(30,77,48,0.3)",
+          color: PARCHMENT,
+          fontFamily: SANS,
+          fontSize: "13.5px",
+          lineHeight: "1.5",
+          letterSpacing: "0.01em",
+          animation: "toastSlideIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          cursor: "pointer",
+          pointerEvents: "auto",
+        }} onClick={() => { setToastMessage(null); if (toastTimer.current) clearTimeout(toastTimer.current); }}>
+          <span style={{ fontSize: "20px", flexShrink: 0 }}>✉️</span>
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
       {/* Gear button — fixed bottom-right */}
       <div ref={settingsRef} className="stackr-gear" style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 201 }}>
