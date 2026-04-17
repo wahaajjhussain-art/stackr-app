@@ -1454,6 +1454,7 @@ function DashboardView({ habits, completions, prefs, date, onNavigate, onAdd, in
         </div>
       ) : (
         <div
+          className="stackr-dashboard-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 280px",
@@ -3533,6 +3534,7 @@ export default function HabitTracker() {
           .stackr-gear { bottom: 72px !important; }
           .stackr-view { padding: 1.25rem 1rem 1.25rem 1rem !important; }
           .stackr-gear button { width: 40px !important; height: 40px !important; }
+          .stackr-dashboard-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
