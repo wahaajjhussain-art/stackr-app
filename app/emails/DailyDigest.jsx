@@ -90,7 +90,8 @@ export default function DailyDigest({
         <Container style={containerStyle}>
           {/* ── Header ── */}
           <Section style={headerSection}>
-            {/* Logo: 4-bar gradient wordmark */}
+            {/* Gradient accent line */}
+            <div style={{ width: "60px", height: "3px", margin: "0 auto 16px", borderRadius: "2px", background: "linear-gradient(90deg, #1E4D30, #2F6B43, #E8B84B)" }} />
             <Text style={logoStyle}>STACKR</Text>
           </Section>
 
@@ -203,6 +204,7 @@ export default function DailyDigest({
 
 const bodyStyle = {
   backgroundColor: "#0F0E0A",
+  background: "linear-gradient(165deg, #14170F 0%, #0F0E0A 35%, #151009 65%, #0F0E0A 100%)",
   margin: 0,
   padding: "40px 0",
   fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -212,9 +214,11 @@ const containerStyle = {
   maxWidth: "560px",
   margin: "0 auto",
   backgroundColor: INK,
+  background: `linear-gradient(180deg, #1A1812 0%, ${INK} 30%, #17140E 100%)`,
   borderRadius: "16px",
-  border: `1px solid rgba(232,224,208,0.06)`,
+  border: `1px solid rgba(232,224,208,0.08)`,
   overflow: "hidden",
+  boxShadow: "0 4px 60px rgba(30,77,48,0.08), 0 2px 30px rgba(196,144,48,0.04)",
 };
 
 const headerSection = {
