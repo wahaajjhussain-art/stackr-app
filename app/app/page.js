@@ -815,8 +815,8 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           </div>
         </div>
 
-        {/* ── Email Reminders ── */}
-        <div style={{ marginBottom: "1.5rem" }}>
+        {/* ── Email Reminders (disabled until custom domain available) ── */}
+        {false && <div style={{ marginBottom: "1.5rem" }}>
           <label style={{
             display: "block",
             fontSize: "10px",
@@ -897,7 +897,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
               )}
             </>
           )}
-        </div>
+        </div>}
 
         <div style={{ display: "flex", gap: "10px", marginTop: "1.75rem" }}>
           <button
@@ -3065,9 +3065,10 @@ export default function HabitTracker() {
     // Pass habitOverride so handleCalendarSync doesn't need to look it up from state
     // (state hasn't re-rendered yet at this point).
     if (gcalSync) handleCalendarSync(id, "create", gcalSync, habit);
-    if (reminderPrefs.reminders_enabled) {
-      showToast("You'll receive daily reminders for your habits on the email registered with Stackr.");
-    }
+    // Email reminder toast disabled until custom domain available
+    // if (reminderPrefs.reminders_enabled) {
+    //   showToast("You'll receive daily reminders for your habits on the email registered with Stackr.");
+    // }
   }
 
   function deleteHabit(id) {
