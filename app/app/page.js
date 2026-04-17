@@ -150,6 +150,14 @@ const NAV_SECTIONS = [
 function Sidebar({ active, setActive }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  /* Lock background scroll while mobile drawer is open */
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [drawerOpen]);
+
   const NavItems = ({ onSelect }) => (
     <nav style={{ flex: 1, padding: "0 0.75rem" }}>
       {NAV_SECTIONS.map((section, si) => (
@@ -226,7 +234,7 @@ function Sidebar({ active, setActive }) {
 
       {/* ── Mobile drawer ── */}
       {drawerOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 400 }} onClick={() => setDrawerOpen(false)}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 400, overscrollBehavior: "contain", touchAction: "none" }} onClick={() => setDrawerOpen(false)}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} />
           <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "240px", background: INK2, borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", padding: "1.5rem 0", overflowY: "auto", animation: "slideInLeft 0.22s ease" }}>
             <div style={{ padding: "0 1.5rem 1.5rem", borderBottom: `1px solid ${BORDER}`, marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -631,8 +639,11 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
         position: "fixed",
         bottom: "72px",
         right: "20px",
+        left: "20px",
         zIndex: 200,
         animation: "settingsDropIn 0.18s ease",
+        display: "flex",
+        justifyContent: "flex-end",
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -643,8 +654,10 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           borderRadius: "16px",
           padding: "1.5rem",
           width: "320px",
+          maxWidth: "100%",
           maxHeight: "calc(100vh - 100px)",
           overflowY: "auto",
+          overscrollBehavior: "contain",
           boxShadow: "0 8px 40px rgba(0,0,0,0.45)",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -982,6 +995,12 @@ function AddHabitModal({ onAdd, onClose }) {
   const [reward, setReward]     = useState("");
   const [error, setError]       = useState("");
 
+  /* Lock background scroll while modal is open */
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   /* ── Google Calendar sync ── */
   const [syncEnabled, setSyncEnabled]     = useState(false);
   const [syncTime, setSyncTime]           = useState("08:00");
@@ -1026,6 +1045,8 @@ function AddHabitModal({ onAdd, onClose }) {
         justifyContent: "center",
         zIndex: 200,
         animation: "fadeIn 0.18s ease",
+        overscrollBehavior: "contain",
+        touchAction: "none",
       }}
     >
       <div
@@ -1040,6 +1061,8 @@ function AddHabitModal({ onAdd, onClose }) {
           position: "relative",
           maxHeight: "90vh",
           overflowY: "auto",
+          overscrollBehavior: "contain",
+          touchAction: "pan-y",
         }}
       >
         {/* Header */}
@@ -1277,7 +1300,7 @@ function DashboardView({ habits, completions, prefs, date, onNavigate, onAdd, in
   const quote = QUOTES[date.getDate() % QUOTES.length];
 
   return (
-    <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem", minHeight: "100vh", position: "relative" }}>
+    <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem", minHeight: "100vh", position: "relative" }}>
       {/* Quick-add modal */}
       {showAddModal && <AddHabitModal onAdd={onAdd} onClose={() => setShowAddModal(false)} />}
 
@@ -1949,7 +1972,7 @@ function HabitDetailRow({ h, onDelete, notes, onAddNote, date, onCalendarSync, o
 
 function AllHabitsView({ habits, onDelete, onNavigate, notes, onAddNote, date, onCalendarSync, onError }) {
   return (
-    <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
+    <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
       <div style={{ marginBottom: "2rem" }}>
         <h2
           style={{
@@ -2012,7 +2035,7 @@ function AddHabitView({ onAdd, onNavigate }) {
   };
 
   return (
-    <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
+    <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
       <h2
         style={{
           fontFamily: SERIF,
@@ -2157,7 +2180,7 @@ function MonthlyView({ habits, completions, date }) {
   const monthName = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
   return (
-    <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
+    <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
       {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
         <p style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "2.5px", textTransform: "uppercase", color: GOLD3, marginBottom: "0.5rem" }}>
@@ -2349,7 +2372,7 @@ function DailyView({ habits, completions, date, setCompletions, onToggleHabit })
   }
 
   return (
-    <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
+    <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
       <div style={{ marginBottom: "2rem" }}>
         <h2
           style={{
@@ -2506,7 +2529,7 @@ function AnalyticsView({ habits, completions, date, notes }) {
   };
 
   return (
-    <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
+    <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
       <h2
         style={{
           fontFamily: SERIF,
@@ -2698,6 +2721,10 @@ function AnalyticsView({ habits, completions, date, notes }) {
    Shows a friendly message; real error goes to Vercel logs only.
    ════════════════════════════════════════════════════ */
 function CalendarSuccessModal({ onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -2708,6 +2735,8 @@ function CalendarSuccessModal({ onClose }) {
         WebkitBackdropFilter: "blur(6px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 400, animation: "fadeIn 0.3s ease",
+        overscrollBehavior: "contain",
+        touchAction: "none",
       }}
     >
       <div style={{
@@ -2796,6 +2825,10 @@ function CalendarSuccessModal({ onClose }) {
 }
 
 function CalendarErrorModal({ onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -2806,6 +2839,8 @@ function CalendarErrorModal({ onClose }) {
         WebkitBackdropFilter: "blur(6px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 300, animation: "fadeIn 0.18s ease",
+        overscrollBehavior: "contain",
+        touchAction: "none",
       }}
     >
       <div style={{
@@ -3363,7 +3398,7 @@ export default function HabitTracker() {
         );
       case "intention":
         return (
-          <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
+          <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
             <IntentionBuilderView
               habits={habits}
               intentions={intentions}
@@ -3376,7 +3411,7 @@ export default function HabitTracker() {
         );
       case "review":
         return (
-          <div style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
+          <div className="stackr-view" style={{ padding: "2.5rem 2.5rem 2.5rem 2rem" }}>
             <ReviewView
               habits={habits}
               completions={completions}
@@ -3496,6 +3531,8 @@ export default function HabitTracker() {
           .stackr-main { padding-top: 52px !important; padding-bottom: 72px !important; }
           .stackr-bottom-nav { display: flex !important; }
           .stackr-gear { bottom: 72px !important; }
+          .stackr-view { padding: 1.25rem 1rem 1.25rem 1rem !important; }
+          .stackr-gear button { width: 40px !important; height: 40px !important; }
         }
       `}</style>
 
