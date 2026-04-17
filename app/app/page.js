@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import {
   fetchHabits, insertHabit, deleteHabitDb, updateHabitDb,
@@ -618,7 +618,7 @@ function YearHeatmap({ completions, allHabits }) {
 /* ════════════════════════════════════════════════════
    SETTINGS MODAL
    ════════════════════════════════════════════════════ */
-function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange, session }) {
+function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange, session, reminderPrefs, onReminderPrefsChange }) {
   if (!open) return null;
 
   function handleSignOut() {
@@ -811,6 +811,90 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
               {prefs.theme === "light" ? "Light" : "Dark"}
             </span>
           </div>
+        </div>
+
+        {/* ── Email Reminders ── */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <label style={{
+            display: "block",
+            fontSize: "10px",
+            fontWeight: 500,
+            textTransform: "uppercase",
+            letterSpacing: "1.5px",
+            color: DIM,
+            marginBottom: "12px",
+          }}>
+            Email Reminders
+          </label>
+
+          {/* Toggle row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <span style={{ fontSize: "13px", color: PARCHMENT, fontWeight: 400 }}>Daily digest</span>
+            <button
+              onClick={() => onReminderPrefsChange({ reminders_enabled: !reminderPrefs.reminders_enabled })}
+              style={{
+                position: "relative",
+                width: "44px",
+                height: "24px",
+                borderRadius: "12px",
+                background: reminderPrefs.reminders_enabled ? "rgba(47,107,67,0.38)" : "rgba(138,132,116,0.2)",
+                border: `1px solid ${reminderPrefs.reminders_enabled ? "rgba(47,107,67,0.55)" : "rgba(138,132,116,0.3)"}`,
+                cursor: "pointer",
+                transition: "background 0.25s, border-color 0.25s",
+                outline: "none",
+                flexShrink: 0,
+              }}
+              aria-label="Toggle email reminders"
+            >
+              <span style={{
+                position: "absolute",
+                top: "2px",
+                left: reminderPrefs.reminders_enabled ? "22px" : "2px",
+                width: "18px",
+                height: "18px",
+                borderRadius: "50%",
+                background: reminderPrefs.reminders_enabled
+                  ? "linear-gradient(135deg, #5A9E72, #2F6B43)"
+                  : "rgba(138,132,116,0.5)",
+                transition: "left 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.25s",
+              }} />
+            </button>
+          </div>
+
+          {/* Time picker (only show when enabled) */}
+          {reminderPrefs.reminders_enabled && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", color: DIM }}>Send at</span>
+                <select
+                  value={reminderPrefs.reminder_hour}
+                  onChange={(e) => onReminderPrefsChange({ reminder_hour: parseInt(e.target.value, 10) })}
+                  style={{
+                    background: INK,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: "6px",
+                    color: PARCHMENT,
+                    fontSize: "12px",
+                    fontFamily: SANS,
+                    padding: "5px 8px",
+                    cursor: "pointer",
+                    outline: "none",
+                  }}
+                >
+                  {Array.from({ length: 17 }, (_, i) => i + 6).map((h) => (
+                    <option key={h} value={h}>
+                      {h === 0 ? "12:00 AM" : h < 12 ? `${h}:00 AM` : h === 12 ? "12:00 PM" : `${h - 12}:00 PM`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {reminderPrefs.timezone && (
+                <div style={{ fontSize: "11px", color: "rgba(138,132,116,0.6)", marginTop: "2px" }}>
+                  Timezone: {reminderPrefs.timezone.replace(/_/g, " ")}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: "10px", marginTop: "1.75rem" }}>
@@ -1165,7 +1249,7 @@ function AddHabitModal({ onAdd, onClose }) {
 }
 
 /* ── Dashboard View ── */
-function DashboardView({ habits, completions, prefs, date, onNavigate, onAdd, intentions, onNavigateIntent, missedHabits, dismissed, onDismiss, onAdjust }) {
+function DashboardView({ habits, completions, prefs, date, onNavigate, onAdd, intentions, onNavigateIntent, missedHabits, dismissed, onDismiss, onAdjust, onToggleHabit }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const todayKey = getDayKey(date);
   const todayCompletions = completions[todayKey] || {};
@@ -1361,6 +1445,7 @@ function DashboardView({ habits, completions, prefs, date, onNavigate, onAdd, in
                 habits={slotHabits}
                 todayCompletions={todayCompletions}
                 completions={completions}
+                onToggleHabit={onToggleHabit}
               />
             ))}
           </div>
@@ -1403,7 +1488,7 @@ function DashboardView({ habits, completions, prefs, date, onNavigate, onAdd, in
 }
 
 /* ── Habit section by time slot ── */
-function HabitSection({ slot, habits, todayCompletions, completions }) {
+function HabitSection({ slot, habits, todayCompletions, completions, onToggleHabit }) {
   const [localDone, setLocalDone] = useState(() => {
     const init = {};
     habits.forEach((h) => { init[h.id] = todayCompletions[h.id] || false; });
@@ -1420,7 +1505,7 @@ function HabitSection({ slot, habits, todayCompletions, completions }) {
     const today = new Date();
     let streak = 0;
     const d = new Date(today);
-    while (true) {
+    while (streak < 365) {
       const key = getDayKey(d);
       if (completions[key] && completions[key][habitId]) {
         streak++;
@@ -1434,10 +1519,7 @@ function HabitSection({ slot, habits, todayCompletions, completions }) {
 
   function toggle(habitId) {
     setLocalDone((prev) => ({ ...prev, [habitId]: !prev[habitId] }));
-    // Persist via parent state is handled by HabitTracker via event bubbling
-    // For now local optimistic state — real persistence wired below
-    const event = new CustomEvent("habitToggle", { detail: { habitId } });
-    window.dispatchEvent(event);
+    if (onToggleHabit) onToggleHabit(habitId);
   }
 
   const pending = habits.filter((h) => !localDone[h.id]);
@@ -2238,7 +2320,7 @@ function MonthlyView({ habits, completions, date }) {
 }
 
 /* ── Daily View ── */
-function DailyView({ habits, completions, date, setCompletions }) {
+function DailyView({ habits, completions, date, setCompletions, onToggleHabit }) {
   const todayKey = getDayKey(date);
   const todayDone = completions[todayKey] || {};
   const doneCount = habits.filter((h) => todayDone[h.id]).length;
@@ -2248,12 +2330,13 @@ function DailyView({ habits, completions, date, setCompletions }) {
       const day = { ...(prev[todayKey] || {}), [id]: !prev[todayKey]?.[id] };
       return { ...prev, [todayKey]: day };
     });
+    if (onToggleHabit) onToggleHabit(id);
   }
 
   function getStreak(habitId) {
     let streak = 0;
     const d = new Date(date);
-    while (true) {
+    while (streak < 365) {
       const key = getDayKey(d);
       if (completions[key] && completions[key][habitId]) {
         streak++;
@@ -2341,7 +2424,7 @@ function AnalyticsView({ habits, completions, date, notes }) {
   function getStreak(habitId) {
     let streak = 0;
     const d = new Date(date);
-    while (true) {
+    while (streak < 365) {
       const key = getDayKey(d);
       if (completions[key] && completions[key][habitId]) { streak++; d.setDate(d.getDate() - 1); }
       else break;
@@ -2363,7 +2446,6 @@ function AnalyticsView({ habits, completions, date, notes }) {
     return best;
   }
 
-  // Weekly completion rate (last 7 days)
   function getWeeklyRate(habitId) {
     let done = 0;
     const d = new Date(date);
@@ -2375,7 +2457,6 @@ function AnalyticsView({ habits, completions, date, notes }) {
     return Math.round((done / 7) * 100);
   }
 
-  // Last 12 weeks bar data for overall completion
   function getWeeklyBars() {
     const bars = [];
     for (let w = 11; w >= 0; w--) {
@@ -2398,7 +2479,24 @@ function AnalyticsView({ habits, completions, date, notes }) {
     return bars;
   }
 
-  const weeklyBars = getWeeklyBars();
+  // Memoize expensive calculations (PERF-05)
+  const habitStats = useMemo(() =>
+    habits.map((h) => ({
+      id: h.id,
+      streak: getStreak(h.id),
+      best: getBestStreak(h.id),
+      weekly: getWeeklyRate(h.id),
+    })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [habits, completions, date]
+  );
+
+  const weeklyBars = useMemo(
+    () => getWeeklyBars(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [habits, completions, date]
+  );
+
   const STAT_BOX = {
     ...card,
     textAlign: "center",
@@ -2521,9 +2619,8 @@ function AnalyticsView({ habits, completions, date, notes }) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {habits.map((h) => {
-                const streak = getStreak(h.id);
-                const best = getBestStreak(h.id);
-                const weekly = getWeeklyRate(h.id);
+                const stats = habitStats.find((s) => s.id === h.id) || { streak: 0, best: 0, weekly: 0 };
+                const { streak, best, weekly } = stats;
                 // Count total notes for this habit across all dates
                 const totalNotes = Object.values(notes || {}).reduce((sum, dayNotes) => {
                   return sum + ((dayNotes[h.id] || []).length);
@@ -2792,12 +2889,22 @@ export default function HabitTracker() {
   const [stacks, setStacks]         = useState([]);
   const [dismissedRestarts, setDismissedRestarts] = useState({});
   const [notes, setNotes] = useState({});
-  const [date] = useState(new Date());
+  const [date, setDate] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const [themeAnim, setThemeAnim] = useState(null);
   const [gcalToken, setGcalToken] = useState(null);
   const [gcalTokenExpiry, setGcalTokenExpiry] = useState(0);
   const [gisReady, setGisReady] = useState(false);
+  const prefsFromDb = useRef(false);
+  const [loadError, setLoadError] = useState(false);
+
+  /* ── Email reminder preferences ── */
+  const [reminderPrefs, setReminderPrefs] = useState({
+    reminders_enabled: true,
+    reminder_hour: 8,
+    timezone: null,
+  });
+  const reminderPrefsLoaded = useRef(false);
 
   /* ── Load Google Identity Services script via useEffect (React ignores <script> in JSX) ── */
   useEffect(() => {
@@ -2811,6 +2918,17 @@ export default function HabitTracker() {
     script.onerror = () => console.error("Failed to load GIS script");
     document.head.appendChild(script);
   }, []);
+
+  /* ── Auto-update date after midnight (EDGE-06) ── */
+  useEffect(() => {
+    function checkDate() {
+      const now = new Date();
+      if (getDayKey(now) !== getDayKey(date)) setDate(now);
+    }
+    const interval = setInterval(checkDate, 60_000);
+    window.addEventListener("focus", checkDate);
+    return () => { clearInterval(interval); window.removeEventListener("focus", checkDate); };
+  }, [date]);
 
   /* ── Close settings dropdown on outside click ── */
   useEffect(() => {
@@ -2841,6 +2959,7 @@ export default function HabitTracker() {
       setCompletions(c);
       if (p) {
         setPrefs({ name: p.name || "", theme: p.theme || "dark" });
+        prefsFromDb.current = true;
       } else {
         // First login — seed name from Google profile
         const firstName = session.user.name?.split(" ")[0] || "";
@@ -2849,37 +2968,82 @@ export default function HabitTracker() {
       setIntentions(i);
       setNotes(n);
       setStacks(st);
+      setLoadError(false);
+    }).catch((err) => {
+      console.error("Failed to load user data:", err);
+      setLoadError(true);
     });
   }, [session]);
 
-  /* ── Sync prefs to Supabase (debounced 600 ms) ── */
+  /* ── Sync prefs to Supabase (debounced 600 ms, skip initial load) ── */
   useEffect(() => {
     const userId = session?.user?.email;
     if (!mounted || !userId) return;
+    if (prefsFromDb.current) {
+      prefsFromDb.current = false;
+      return;
+    }
     const t = setTimeout(() => upsertPrefs(userId, prefs), 600);
     return () => clearTimeout(t);
   }, [prefs, mounted, session]);
 
-  /* ── Habit toggle listener (dashboard HabitSection fires custom event) ── */
+  /* ── Load reminder prefs + auto-detect timezone ── */
   useEffect(() => {
-    function handle(e) {
-      const { habitId } = e.detail;
-      const todayKey = getDayKey(date);
-      const userId = sessionRef.current?.user?.email;
-      setCompletions((prev) => {
-        const nowCompleted = !prev[todayKey]?.[habitId];
-        const day = { ...(prev[todayKey] || {}), [habitId]: nowCompleted };
-        if (userId) toggleCompletionDb(userId, habitId, todayKey, nowCompleted);
-        return { ...prev, [todayKey]: day };
-      });
-    }
-    window.addEventListener("habitToggle", handle);
-    return () => window.removeEventListener("habitToggle", handle);
-  }, [date]);
+    const userId = session?.user?.email;
+    if (!userId) return;
+    fetch("/api/reminders/preferences")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          setReminderPrefs(data);
+          reminderPrefsLoaded.current = true;
+          // Auto-detect timezone if not yet saved
+          const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          if (!data.timezone && browserTz) {
+            fetch("/api/reminders/preferences", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ timezone: browserTz }),
+            });
+            setReminderPrefs((prev) => ({ ...prev, timezone: browserTz }));
+          }
+        }
+      })
+      .catch(() => {}); // silent — reminders are non-critical
+  }, [session]);
+
+  /* ── Handler for reminder preference changes (debounced save) ── */
+  function handleReminderPrefsChange(updates) {
+    setReminderPrefs((prev) => {
+      const next = { ...prev, ...updates };
+      // Debounced save to API
+      clearTimeout(handleReminderPrefsChange._timer);
+      handleReminderPrefsChange._timer = setTimeout(() => {
+        fetch("/api/reminders/preferences", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        }).catch(() => {});
+      }, 600);
+      return next;
+    });
+  }
+
+  /* ── Habit toggle handler (replaces custom event bus) ── */
+  function handleToggleHabit(habitId) {
+    const todayKey = getDayKey(date);
+    const userId = sessionRef.current?.user?.email;
+    setCompletions((prev) => {
+      const nowCompleted = !prev[todayKey]?.[habitId];
+      const day = { ...(prev[todayKey] || {}), [habitId]: nowCompleted };
+      if (userId) toggleCompletionDb(userId, habitId, todayKey, nowCompleted);
+      return { ...prev, [todayKey]: day };
+    });
+  }
 
   /* ── Actions ── */
   function addHabit({ name, timeSlot, category, cue, reward, gcalSync }) {
-    const id = `h_${Date.now()}`;
+    const id = `h_${crypto.randomUUID()}`;
     const habit = { id, name, timeSlot, category, cue, reward };
     setHabits((prev) => [...prev, habit]);
     const userId = sessionRef.current?.user?.email;
@@ -2940,10 +3104,12 @@ export default function HabitTracker() {
       }
       const isExpired = !gcalToken || Date.now() >= gcalTokenExpiry - 60_000;
       if (!isExpired) { resolve(gcalToken); return; }
-      /* NEXT_PUBLIC_ vars are only inlined at build time; fall back to literal for Vercel */
-      const clientId =
-        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-        "391307255582-glhceinhll3s9qqj167b8mhcrj03kpvt.apps.googleusercontent.com";
+      /* NEXT_PUBLIC_ vars are inlined at build time */
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        reject(new Error("Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID environment variable."));
+        return;
+      }
       const client = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: "https://www.googleapis.com/auth/calendar.events",
@@ -3114,6 +3280,7 @@ export default function HabitTracker() {
             dismissed={dismissedRestarts}
             onDismiss={(id) => setDismissedRestarts((prev) => ({ ...prev, [id]: true }))}
             onAdjust={handleAdjustHabit}
+            onToggleHabit={handleToggleHabit}
           />
         );
       case "all-habits":
@@ -3156,6 +3323,7 @@ export default function HabitTracker() {
             completions={completions}
             date={date}
             setCompletions={setCompletions}
+            onToggleHabit={handleToggleHabit}
           />
         );
       case "stacking":
@@ -3205,6 +3373,17 @@ export default function HabitTracker() {
   }
 
   if (!mounted) return null;
+
+  if (loadError) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: INK, color: PARCHMENT, fontFamily: SANS }}>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ marginBottom: "1rem" }}>Something went wrong loading your data.</p>
+          <button onClick={() => { setLoadError(false); window.location.reload(); }} style={{ padding: "0.5rem 1.5rem", borderRadius: 8, border: "none", background: ACCENT, color: INK, fontWeight: 600, cursor: "pointer" }}>Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   const isLight = prefs.theme === "light";
 
@@ -3406,6 +3585,8 @@ export default function HabitTracker() {
           onReset={resetAll}
           onThemeChange={handleThemeChange}
           session={session}
+          reminderPrefs={reminderPrefs}
+          onReminderPrefsChange={handleReminderPrefsChange}
         />
       </div>
     </div>
