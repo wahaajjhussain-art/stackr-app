@@ -752,7 +752,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           >
             Appearance
           </label>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {/* Solid Sun */}
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"
               style={{ color: prefs.theme === "light" ? "#E8B84B" : "var(--s-dim)", transition: "color 0.3s", flexShrink: 0 }}>
@@ -957,6 +957,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           onClick={handleSignOut}
           style={{
             marginTop: "0.75rem",
+            display: "block",
             width: "100%",
             boxSizing: "border-box",
             padding: "0.65rem",
@@ -967,19 +968,13 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
             fontFamily: SANS,
             fontSize: "13px",
             cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
+            textAlign: "center",
             whiteSpace: "nowrap",
             transition: "color 0.15s, border-color 0.15s",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.color = PARCHMENT; e.currentTarget.style.borderColor = BORDER2; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = DIM; e.currentTarget.style.borderColor = BORDER; }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
           Sign out
         </button>
       </div>
