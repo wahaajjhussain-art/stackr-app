@@ -553,7 +553,8 @@ function YearHeatmap({ completions, allHabits }) {
   const monthLabels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
   return (
-    <div>
+    <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div style={{ minWidth: "680px" }}>
       {/* Month labels */}
       <div style={{ display: "flex", gap: "2px", marginBottom: "6px", paddingLeft: "24px" }}>
         {monthLabels.map((m, i) => (
@@ -618,6 +619,7 @@ function YearHeatmap({ completions, allHabits }) {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );
