@@ -643,6 +643,8 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           borderRadius: "16px",
           padding: "1.5rem",
           width: "320px",
+          maxHeight: "calc(100vh - 100px)",
+          overflowY: "auto",
           boxShadow: "0 8px 40px rgba(0,0,0,0.45)",
         }}
         onClick={(e) => e.stopPropagation()}
