@@ -637,15 +637,13 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
   }
   return (
     <div
+      className="stackr-settings-anchor"
       style={{
         position: "fixed",
         bottom: "72px",
         right: "20px",
-        left: "20px",
         zIndex: 200,
         animation: "settingsDropIn 0.18s ease",
-        display: "flex",
-        justifyContent: "flex-end",
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -656,8 +654,8 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           borderRadius: "16px",
           padding: "1.5rem",
           width: "320px",
-          maxWidth: "100%",
-          maxHeight: "calc(100vh - 100px)",
+          maxWidth: "calc(100vw - 40px)",
+          maxHeight: "calc(100vh - 140px)",
           overflowY: "auto",
           overscrollBehavior: "contain",
           boxShadow: "0 8px 40px rgba(0,0,0,0.45)",
@@ -753,9 +751,9 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
           >
             Appearance
           </label>
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             {/* Solid Sun */}
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"
               style={{ color: prefs.theme === "light" ? "#E8B84B" : "var(--s-dim)", transition: "color 0.3s", flexShrink: 0 }}>
               <circle cx="12" cy="12" r="5"/>
               <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
@@ -819,7 +817,7 @@ function SettingsModal({ open, onClose, prefs, setPrefs, onReset, onThemeChange,
             </button>
 
             {/* Solid Moon */}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"
               style={{ color: prefs.theme === "dark" ? ACCENT3 : "var(--s-dim)", transition: "color 0.3s", flexShrink: 0 }}>
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
@@ -3537,6 +3535,7 @@ export default function HabitTracker() {
           .stackr-view { padding: 1.25rem 1rem 1.25rem 1rem !important; }
           .stackr-gear button { width: 40px !important; height: 40px !important; }
           .stackr-dashboard-grid { grid-template-columns: 1fr !important; }
+          .stackr-settings-anchor { right: 10px !important; bottom: 72px !important; }
         }
       `}</style>
 
